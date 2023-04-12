@@ -1,0 +1,91 @@
+service:
+  golangci-lint-version: 1.51.x
+
+run:
+  timeout: 2m
+  skip-dirs:
+    - vendor
+
+linters-settings:
+  govet:
+    check-shadowing: true
+  revive:
+    min-confidence: 0.1
+    rules:
+      - name: package-comments
+        disabled: true
+  maligned:
+    suggest-new: true
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  misspell:
+    locale: US
+  lll:
+    line-length: 140
+  gocritic:
+    enabled-tags:
+      - performance
+      - style
+      - experimental
+    disabled-checks:
+      - hugeParam
+      - commentedOutCode
+  gci:
+    sections:
+      - standard
+      - default
+
+linters:
+  enable:
+    - bodyclose
+    - megacheck
+    - revive
+    - govet
+    - unconvert
+    - megacheck
+    - structcheck
+    - gas
+    - gocyclo
+    - dupl
+    - misspell
+    - unparam
+    - varcheck
+    - deadcode
+    - typecheck
+    - ineffassign
+    - varcheck
+    - stylecheck
+    - gochecknoinits
+    - exportloopref
+    - gocritic
+    - nakedret
+    - gosimple
+    - prealloc
+    - gci
+    - errcheck
+    - gofmt
+    - goimports
+  fast: false
+  disable-all: true
+
+issues:
+  exclude:
+    - 'shadow: declaration of "err" shadows declaration at'
+  exclude-rules:
+    - text: "re-assignment to `err` can be replaced with"
+      linters:
+        - gocritic
+      # Fix and remove
+    - text: "at least one file in a package should have a package comment"
+      linters:
+        - stylecheck
+      # Fix and remove
+    - text: "should have a package comment, unless it's in another file for this package"
+      linters:
+        - revive
+    - path: _test\.go
+      linters:
+        - gosec
+        - dupl
+  exclude-use-default: false

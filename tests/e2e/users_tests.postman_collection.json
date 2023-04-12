@@ -1,0 +1,369 @@
+{
+	"info": {
+		"_postman_id": "b3c08790-033e-4388-83c1-eeebabe8c6b9",
+		"name": "Nameservice users e2e tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Reslover state by NOT published genesis state",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"pm.test(\"Did doc not found\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  pm.expect(responseJson.didDocument.authentication[0].published).to.eq(false)",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDj9EDytmvtQP1or3FxykXGEaqSA1ss479MYHDMJc?state=ab46115ca11bc069e6d77202d857420b5215d260bcb2ff33d005df9bda816306",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"1.0",
+						"identifiers",
+						"did:polygonid:polygon:mumbai:2qDj9EDytmvtQP1or3FxykXGEaqSA1ss479MYHDMJc"
+					],
+					"query": [
+						{
+							"key": "state",
+							"value": "ab46115ca11bc069e6d77202d857420b5215d260bcb2ff33d005df9bda816306"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resolve NOT published did",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"pm.test(\"Did doc not found\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  pm.expect(responseJson.didDocument.authentication[0].published).to.eq(false)",
+							"  pm.expect(responseJson.didDocument.authentication[0].global).not.empty;",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDj9EDytmvtQP1or3FxykXGEaqSA1ss479MYHDMJc",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"1.0",
+						"identifiers",
+						"did:polygonid:polygon:mumbai:2qDj9EDytmvtQP1or3FxykXGEaqSA1ss479MYHDMJc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resolve state by gist for not published Issuer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDj9EDytmvtQP1or3FxykXGEaqSA1ss479MYHDMJc?gist=08f68a505fc16b2e95e52edaba0880ac3f72b42494b9777968400c3a261e7f01",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"1.0",
+						"identifiers",
+						"did:polygonid:polygon:mumbai:2qDj9EDytmvtQP1or3FxykXGEaqSA1ss479MYHDMJc"
+					],
+					"query": [
+						{
+							"key": "gist",
+							"value": "08f68a505fc16b2e95e52edaba0880ac3f72b42494b9777968400c3a261e7f01"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resolve published did",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"pm.test(\"Did doc not found\", () => {",
+							"    const responseJson = pm.response.json();",
+							"",
+							"    pm.expect(responseJson.didDocument.authentication[0].published).to.eq(true)",
+							"    pm.expect(responseJson.didDocument.authentication[0].info).not.empty;",
+							"    pm.expect(responseJson.didDocument.authentication[0].global).not.empty;",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"1.0",
+						"identifiers",
+						"did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resolve state by state",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"pm.test(\"Did doc not found\", () => {",
+							"    const responseJson = pm.response.json();",
+							"    ",
+							"    pm.expect(responseJson.didDocument.authentication[0].published).to.eq(true)",
+							"    pm.expect(responseJson.didDocument.authentication[0].info).not.empty;",
+							"    pm.expect(responseJson.didDocument.authentication[0].global).to.equal(undefined);",
+							"",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x?state=a637414036aeca62e04e28e6c5c3fdb2147743edd31ccd825df491122aeee521",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"1.0",
+						"identifiers",
+						"did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x"
+					],
+					"query": [
+						{
+							"key": "state",
+							"value": "a637414036aeca62e04e28e6c5c3fdb2147743edd31ccd825df491122aeee521"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resolve state by gist",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"pm.test(\"Did doc not found\", () => {",
+							"    const responseJson = pm.response.json();",
+							"",
+							"    pm.expect(responseJson.didDocument.authentication[0].published).to.eq(true)",
+							"    pm.expect(responseJson.didDocument.authentication[0].info).not.empty;",
+							"    pm.expect(responseJson.didDocument.authentication[0].global).not.empty;",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x?gist=3e0cbeb1c5262b100b38eda2b4d1c45a1146e1960dbc230deb773aa6125f1a21",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"1.0",
+						"identifiers",
+						"did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x"
+					],
+					"query": [
+						{
+							"key": "gist",
+							"value": "3e0cbeb1c5262b100b38eda2b4d1c45a1146e1960dbc230deb773aa6125f1a21"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resolve state by issuer genesis state",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"pm.test(\"Did doc not found\", () => {",
+							"const responseJson = pm.response.json();",
+							"    pm.expect(responseJson.didDocument.authentication[0].published).to.eq(true)",
+							"    pm.expect(responseJson.didDocument.authentication[0].info).not.empty;",
+							"    pm.expect(responseJson.didDocument.authentication[0].global).to.eq(undefined);",
+							"",
+							"    // check that genesis state was replaced",
+							"    pm.expect(responseJson.didDocument.authentication[0].info.replacedAtTimestamp).not.empty",
+							"    pm.expect(responseJson.didDocument.authentication[0].info.replacedAtBlock).not.empty",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x?state=39286e846f1198b99fa2cf7b4e5ce6ee7ed71df71cb98be19daeb935f0f0a30c",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"1.0",
+						"identifiers",
+						"did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x"
+					],
+					"query": [
+						{
+							"key": "state",
+							"value": "39286e846f1198b99fa2cf7b4e5ce6ee7ed71df71cb98be19daeb935f0f0a30c"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "latest_gist",
+			"value": ""
+		},
+		{
+			"key": "latest_issuer_state",
+			"value": ""
+		},
+		{
+			"key": "latest_gist_root",
+			"value": ""
+		}
+	]
+}

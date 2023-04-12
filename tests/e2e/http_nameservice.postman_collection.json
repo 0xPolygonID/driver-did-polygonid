@@ -1,0 +1,769 @@
+{
+	"info": {
+		"_postman_id": "6f0dbf04-363c-41aa-b974-145ec74e3bc0",
+		"name": "Nameservice e2e",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create issuer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json; charset=utf-8');",
+							"});",
+							"",
+							"pm.test(\"Identifier is not empty\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  pm.expect(responseJson.identifier).to.not.eq(undefined);",
+							"});",
+							"",
+							"pm.collectionVariables.set(\"issuer_identity\", pm.response.json().identifier);",
+							"pm.collectionVariables.set(\"issuer_genesis_state\", pm.response.json().state.state)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"did_metadata\":{\n        \"method\": \"polygonid\",\n        \"blockchain\":\"polygon\",\n        \"network\": \"mumbai\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{issuer_server}}/api/v1/identities",
+					"host": [
+						"{{issuer_server}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"identities"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json; charset=utf-8');",
+							"});",
+							"",
+							"pm.test(\"Identifier is not empty\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  pm.expect(responseJson.identifier).to.not.eq(undefined);",
+							"});",
+							"",
+							"pm.collectionVariables.set(\"user_identity\", pm.response.json().identifier);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"did_metadata\":{\n        \"method\": \"polygonid\",\n        \"blockchain\":\"polygon\",\n        \"network\": \"mumbai\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{issuer_server}}/api/v1/identities",
+					"host": [
+						"{{issuer_server}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"identities"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resolve state by NOT published genesis state",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"pm.test(\"Did doc not found\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  pm.expect(responseJson.didDocument.id).to.eq(pm.collectionVariables.get(\"issuer_identity\"));",
+							"  pm.expect(responseJson.didDocument.authentication[0].id).to.eq(pm.collectionVariables.get(\"issuer_identity\"))",
+							"  pm.expect(responseJson.didDocument.authentication[0].published).to.eq(false)",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{resolver_server}}/1.0/identifiers/{{issuer_identity}}?state={{issuer_genesis_state}}",
+					"host": [
+						"{{resolver_server}}"
+					],
+					"path": [
+						"1.0",
+						"identifiers",
+						"{{issuer_identity}}"
+					],
+					"query": [
+						{
+							"key": "state",
+							"value": "{{issuer_genesis_state}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resolve NOT published did",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"pm.test(\"Did doc not found\", () => {",
+							"  const responseJson = pm.response.json();",
+							"  pm.expect(responseJson.didDocument.authentication[0].id).to.eq(pm.collectionVariables.get(\"issuer_identity\"))",
+							"  pm.expect(responseJson.didDocument.authentication[0].published).to.eq(false)",
+							"  pm.expect(responseJson.didDocument.authentication[0].global).not.empty;",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{resolver_server}}/1.0/identifiers/{{issuer_identity}}",
+					"host": [
+						"{{resolver_server}}"
+					],
+					"path": [
+						"1.0",
+						"identifiers",
+						"{{issuer_identity}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get gist for not published issuer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"// pm.collectionVariables.set(\"latest_gist\", BigInt(\"0x\" + pm.response.json().root).toString())",
+							"",
+							"pm.collectionVariables.set(\"latest_gist\", pm.response.json().root)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{resolver_server}}/1.0/gist?chain=polygon&networkid=mumbai",
+					"host": [
+						"{{resolver_server}}"
+					],
+					"path": [
+						"1.0",
+						"gist"
+					],
+					"query": [
+						{
+							"key": "chain",
+							"value": "polygon"
+						},
+						{
+							"key": "networkid",
+							"value": "mumbai"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resolve state by gist for not published Issuer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"pm.test(\"Did doc not found\", () => {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson.didDocument.id).to.eq(pm.collectionVariables.get(\"issuer_identity\"));",
+							"",
+							"    pm.expect(responseJson.didDocument.authentication[0].published).to.eq(false)",
+							"    pm.expect(responseJson.didDocument.authentication[0].info).to.eq(undefined);",
+							"    pm.expect(responseJson.didDocument.authentication[0].global).not.empty;",
+							"",
+							"    pm.expect(responseJson.didDocument.authentication[0].id).to.eq(",
+							"        pm.collectionVariables.get(\"issuer_identity\")",
+							"    )",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{resolver_server}}/1.0/identifiers/{{issuer_identity}}?gist={{latest_gist}}",
+					"host": [
+						"{{resolver_server}}"
+					],
+					"path": [
+						"1.0",
+						"identifiers",
+						"{{issuer_identity}}"
+					],
+					"query": [
+						{
+							"key": "gist",
+							"value": "{{latest_gist}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "KYCAgeCredential(Non merklized)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 202\", function () {",
+							"    pm.response.to.have.status(202);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json; charset=utf-8');",
+							"});",
+							"",
+							"pm.collectionVariables.set(\"age_claim_non_merklized_id\", pm.response.json().id);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"credentialSchema\": \"https://raw.githubusercontent.com/iden3/claim-schema-vocab/main/schemas/json/KYCAgeCredential-v2.json\",\n    \"type\": \"KYCAgeCredential\",\n    \"credentialSubject\": {\n        \"id\": \"{{user_identity}}\",\n        \"birthday\": 19960424,\n        \"documentType\": 99\n    },\n    \"expiration\": 12345678888\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{issuer_server}}/api/v1/identities/{{issuer_identity}}/claims",
+					"host": [
+						"{{issuer_server}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"identities",
+						"{{issuer_identity}}",
+						"claims"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "KYCAgeCredential(Non merklized) wait for MTP",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (!pm.environment.get(\"retry_count\")) {",
+							"    pm.environment.set(\"retry_count\", 1);",
+							"}",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json; charset=utf-8');",
+							"});",
+							"",
+							"pm.test(\"Proof section is NOT empty\", function () {",
+							"    pm.expect(pm.response.json().proof).to.not.eq(undefined);",
+							"});",
+							"",
+							"if (pm.response.json().proof.length == 2 ||",
+							"    pm.environment.get(\"retry_count\") > pm.globals.get(\"max_retry\")) { // Some condition to decide if retrying the request is needed",
+							"        pm.expect(pm.response.json().proof[1]).not.eq(undefined);",
+							"        pm.expect(pm.response.json().proof[1].issuerData.state.blockTimestamp).not.eq(undefined);",
+							"        ",
+							"        pm.environment.set(\"retry_count\", 1);",
+							"        pm.collectionVariables.set(\"age_claim_non_merklized_import\", pm.response.text());",
+							"    }",
+							"else{",
+							"  var count = parseInt(pm.environment.get(\"retry_count\"), 10);",
+							"  pm.environment.set(\"retry_count\", count + 1);",
+							"  console.log(\"Retry request:\"+pm.info.requestName + \" :\"+count);",
+							"  setTimeout(() => {}, pm.globals.get(\"repeat_timeout\")); // wait for x second before retrying",
+							"  postman.setNextRequest(pm.info.requestId); // retry the current request",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{issuer_server}}/api/v1/identities/{{issuer_identity}}/claims/{{age_claim_non_merklized_id}}",
+					"host": [
+						"{{issuer_server}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"identities",
+						"{{issuer_identity}}",
+						"claims",
+						"{{age_claim_non_merklized_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resolve published did",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"pm.test(\"Did doc not found\", () => {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson.didDocument.id).to.eq(pm.collectionVariables.get(\"issuer_identity\"));",
+							"",
+							"    pm.expect(responseJson.didDocument.authentication[0].published).to.eq(true)",
+							"    pm.expect(responseJson.didDocument.authentication[0].info).not.empty;",
+							"    pm.expect(responseJson.didDocument.authentication[0].global).not.empty;",
+							"",
+							"    pm.expect(responseJson.didDocument.authentication[0].id).to.eq(",
+							"        pm.collectionVariables.get(\"issuer_identity\") +",
+							"        \"?state=\" +",
+							"        pm.response.json().didDocument.authentication[0].info.state",
+							"    )",
+							"});",
+							"",
+							"pm.collectionVariables.set(\"latest_issuer_state\", pm.response.json().didDocument.authentication[0].info.state);",
+							"pm.collectionVariables.set(\"latest_gist_root\", pm.response.json().didDocument.authentication[0].global.root);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{resolver_server}}/1.0/identifiers/{{issuer_identity}}",
+					"host": [
+						"{{resolver_server}}"
+					],
+					"path": [
+						"1.0",
+						"identifiers",
+						"{{issuer_identity}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resolve state by state",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"pm.test(\"Did doc not found\", () => {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson.didDocument.id).to.eq(pm.collectionVariables.get(\"issuer_identity\"));",
+							"",
+							"    pm.expect(responseJson.didDocument.authentication[0].published).to.eq(true)",
+							"    pm.expect(responseJson.didDocument.authentication[0].info).not.empty;",
+							"    pm.expect(responseJson.didDocument.authentication[0].global).to.equal(undefined);",
+							"",
+							"    pm.expect(responseJson.didDocument.authentication[0].id).to.eq(",
+							"        pm.collectionVariables.get(\"issuer_identity\") +",
+							"        \"?state=\" +",
+							"        pm.response.json().didDocument.authentication[0].info.state",
+							"    )",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{resolver_server}}/1.0/identifiers/{{issuer_identity}}?state={{latest_issuer_state}}",
+					"host": [
+						"{{resolver_server}}"
+					],
+					"path": [
+						"1.0",
+						"identifiers",
+						"{{issuer_identity}}"
+					],
+					"query": [
+						{
+							"key": "state",
+							"value": "{{latest_issuer_state}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get gist",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"// pm.collectionVariables.set(\"latest_gist\", BigInt(\"0x\" + pm.response.json().root).toString())",
+							"",
+							"pm.collectionVariables.set(\"latest_gist\", pm.response.json().root)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{resolver_server}}/1.0/gist?chain=polygon&networkid=mumbai",
+					"host": [
+						"{{resolver_server}}"
+					],
+					"path": [
+						"1.0",
+						"gist"
+					],
+					"query": [
+						{
+							"key": "chain",
+							"value": "polygon"
+						},
+						{
+							"key": "networkid",
+							"value": "mumbai"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resolve state by gist",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"pm.test(\"Did doc not found\", () => {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson.didDocument.id).to.eq(pm.collectionVariables.get(\"issuer_identity\"));",
+							"",
+							"    pm.expect(responseJson.didDocument.authentication[0].published).to.eq(true)",
+							"    pm.expect(responseJson.didDocument.authentication[0].info).not.empty;",
+							"    pm.expect(responseJson.didDocument.authentication[0].global).not.empty;",
+							"",
+							"    pm.expect(responseJson.didDocument.authentication[0].id).to.eq(",
+							"        pm.collectionVariables.get(\"issuer_identity\") +",
+							"        \"?state=\" +",
+							"        pm.response.json().didDocument.authentication[0].info.state",
+							"    )",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{resolver_server}}/1.0/identifiers/{{issuer_identity}}?gist={{latest_gist}}",
+					"host": [
+						"{{resolver_server}}"
+					],
+					"path": [
+						"1.0",
+						"identifiers",
+						"{{issuer_identity}}"
+					],
+					"query": [
+						{
+							"key": "gist",
+							"value": "{{latest_gist}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Resolve state by issuer genesis state",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type header is application/json\", () => {",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/json');",
+							"});",
+							"",
+							"pm.test(\"Did doc not found\", () => {",
+							"const responseJson = pm.response.json();",
+							"    pm.expect(responseJson.didDocument.id).to.eq(pm.collectionVariables.get(\"issuer_identity\"));",
+							"",
+							"    pm.expect(responseJson.didDocument.authentication[0].published).to.eq(true)",
+							"    pm.expect(responseJson.didDocument.authentication[0].info).not.empty;",
+							"    pm.expect(responseJson.didDocument.authentication[0].global).to.eq(undefined);",
+							"",
+							"    pm.expect(responseJson.didDocument.authentication[0].id).to.eq(",
+							"        pm.collectionVariables.get(\"issuer_identity\") +",
+							"        \"?state=\" +",
+							"        pm.collectionVariables.get(\"issuer_genesis_state\")",
+							"    )",
+							"",
+							"    // check that genesis state was replaced",
+							"    pm.expect(responseJson.didDocument.authentication[0].info.replacedAtTimestamp).not.empty",
+							"    pm.expect(responseJson.didDocument.authentication[0].info.replacedAtBlock).not.empty",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{resolver_server}}/1.0/identifiers/{{issuer_identity}}?state={{issuer_genesis_state}}",
+					"host": [
+						"{{resolver_server}}"
+					],
+					"path": [
+						"1.0",
+						"identifiers",
+						"{{issuer_identity}}"
+					],
+					"query": [
+						{
+							"key": "state",
+							"value": "{{issuer_genesis_state}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "issuer_identity",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "user_identity",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "age_claim_non_merklized_id",
+			"value": ""
+		},
+		{
+			"key": "age_claim_non_merklized_import",
+			"value": ""
+		},
+		{
+			"key": "issuer_genesis_state",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "latest_gist",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "latest_issuer_state",
+			"value": ""
+		},
+		{
+			"key": "latest_gist_root",
+			"value": ""
+		}
+	]
+}
