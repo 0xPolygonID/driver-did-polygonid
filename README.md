@@ -25,7 +25,7 @@ Driver for the polygonid DID method.
     polygon:
         mumbai:
             contractAddress: "0x134B1BE34911E39A8397ec6289782989729807a4"
-            networkURL: "<POLYGON_MUMBAI_RPC_URL"
+            networkURL: "<POLYGON_MUMBAI_RPC_URL>"
     ```
 2. Build docker container:
     ```bash
