@@ -9,6 +9,9 @@ jobs:
       ETHEREUM_CONTRACT_MAINNET_ADDRESS: "0xdc2A724E6bd60144Cde9DEC0A38a26C619d84B90"
     runs-on: ubuntu-latest
     steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
       - name: Checkout driver-did-polygonid
         uses: actions/checkout@v3
         with:
