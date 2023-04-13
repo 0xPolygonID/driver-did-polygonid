@@ -1,0 +1,48 @@
+name: Publish driver-did-polygonid
+on:
+  workflow_dispatch:
+
+jobs:
+  build_driver:
+    env:
+      ETHEREUM_CONTRACT_ADDRESS: "0x134B1BE34911E39A8397ec6289782989729807a4"
+      ETHEREUM_CONTRACT_MAINNET_ADDRESS: "0xdc2A724E6bd60144Cde9DEC0A38a26C619d84B90"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout driver-did-polygonid
+        uses: actions/checkout@v3
+        with:
+          path: driver-did-polygonid
+
+      - name: Login to DockerHub container registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_LOGIN }}
+          password: ${{ secrets.DOCKER_HUB_PASS }}
+
+      - name: Build file with supported networks
+        run: |
+          cd driver-did-polygonid
+          echo -e "polygon:" > resolvers.settings.yaml
+          echo -e "  mumbai:" >> resolvers.settings.yaml
+          echo -e "    contractAddress: ${{ env.ETHEREUM_CONTRACT_ADDRESS }}" >> resolvers.settings.yaml
+          echo -e "    networkURL: ${{ secrets.POLYGON_NODE_URL }}" >> resolvers.settings.yaml
+          echo -e "  mainnet:" >> resolvers.settings.yaml
+          echo -e "    contractAddress: ${{ env.ETHEREUM_CONTRACT_MAINNET_ADDRESS }}" >> resolvers.settings.yaml
+          echo -e "    networkURL: ${{ secrets.POLYGON_MAINET_NODE_URL }}" >> resolvers.settings.yaml
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: build and deploy to DockerHub
+        env:
+          GITHUB_REF: ${{github.ref}}
+        run: |
+          ref="$(echo ${GITHUB_REF} | cut -d'/' -f3)"
+          echo GITHUB_REF - $ref
+          cd driver-did-polygonid && \
+          docker buildx build --push \
+           --platform linux/amd64 \
+           -t polygonid/driver-did-polygonid:${ref} \
+           -t polygonid/driver-did-polygonid:latest .
