@@ -44,5 +44,7 @@ jobs:
           cd driver-did-polygonid && \
           docker buildx build --push \
            --platform linux/amd64 \
+           --platform linux/arm64 \
+           --platform darwin/arm64 \
            -t polygonid/driver-did-polygonid:${ref} \
            -t polygonid/driver-did-polygonid:latest .
