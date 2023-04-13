@@ -43,6 +43,6 @@ jobs:
           echo GITHUB_REF - $ref
           cd driver-did-polygonid && \
           docker buildx build --push \
-           --platform linux/amd64,linux/arm64,darwin/arm64 \
+           --platform linux/amd64,linux/arm64 \
            -t polygonid/driver-did-polygonid:${ref} \
            -t polygonid/driver-did-polygonid:latest .
