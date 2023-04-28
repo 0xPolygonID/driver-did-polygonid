@@ -6,7 +6,7 @@ jobs:
   build_driver:
     env:
       ETHEREUM_CONTRACT_ADDRESS: "0x134B1BE34911E39A8397ec6289782989729807a4"
-      ETHEREUM_CONTRACT_MAINNET_ADDRESS: "0xdc2A724E6bd60144Cde9DEC0A38a26C619d84B90"
+      ETHEREUM_CONTRACT_MAINNET_ADDRESS: "0x624ce98D2d27b20b8f8d521723Df8fC4db71D79D"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout driver-did-polygonid
