@@ -27,7 +27,7 @@ jobs:
           echo -e "  mumbai:" >> resolvers.settings.yaml
           echo -e "    contractAddress: ${{ env.ETHEREUM_CONTRACT_ADDRESS }}" >> resolvers.settings.yaml
           echo -e "    networkURL: ${{ secrets.POLYGON_NODE_URL }}" >> resolvers.settings.yaml
-          echo -e "  mainnet:" >> resolvers.settings.yaml
+          echo -e "  main:" >> resolvers.settings.yaml
           echo -e "    contractAddress: ${{ env.ETHEREUM_CONTRACT_MAINNET_ADDRESS }}" >> resolvers.settings.yaml
           echo -e "    networkURL: ${{ secrets.POLYGON_MAINET_NODE_URL }}" >> resolvers.settings.yaml
 
