@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "6f0dbf04-363c-41aa-b974-145ec74e3bc0",
+		"_postman_id": "0b0a25e8-a76c-4b32-a470-3933ddecf73f",
 		"name": "Nameservice e2e",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -452,7 +452,7 @@
 							"",
 							"    pm.expect(responseJson.didDocument.authentication[0].id).to.eq(",
 							"        pm.collectionVariables.get(\"issuer_identity\") +",
-							"        \"?state=\" +",
+							"        \"#stateInfo?state=\" +",
 							"        pm.response.json().didDocument.authentication[0].info.state",
 							"    )",
 							"});",
@@ -506,7 +506,7 @@
 							"",
 							"    pm.expect(responseJson.didDocument.authentication[0].id).to.eq(",
 							"        pm.collectionVariables.get(\"issuer_identity\") +",
-							"        \"?state=\" +",
+							"        \"#stateInfo?state=\" +",
 							"        pm.response.json().didDocument.authentication[0].info.state",
 							"    )",
 							"});",
@@ -611,7 +611,7 @@
 							"",
 							"    pm.expect(responseJson.didDocument.authentication[0].id).to.eq(",
 							"        pm.collectionVariables.get(\"issuer_identity\") +",
-							"        \"?state=\" +",
+							"        \"#stateInfo?state=\" +",
 							"        pm.response.json().didDocument.authentication[0].info.state",
 							"    )",
 							"});",
@@ -669,7 +669,7 @@
 							"",
 							"    pm.expect(responseJson.didDocument.authentication[0].id).to.eq(",
 							"        pm.collectionVariables.get(\"issuer_identity\") +",
-							"        \"?state=\" +",
+							"        \"#stateInfo?state=\" +",
 							"        pm.collectionVariables.get(\"issuer_genesis_state\")",
 							"    )",
 							"",
