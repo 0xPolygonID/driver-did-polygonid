@@ -76,8 +76,9 @@ func NewDidErrorResolution(errCode ErrorCode, errMsg string) *DidResolution {
 }
 
 type Authentication struct {
-	ID   string `json:"id"`
-	Type string `json:"type"`
+	ID         string `json:"id"`
+	Type       string `json:"type"`
+	Controller string `json:"controller"`
 	IdentityState
 }
 

@@ -75,8 +75,9 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 	didResolution.DidDocument.Authentication = append(
 		didResolution.DidDocument.Authentication,
 		document.Authentication{
-			ID:   getRepresentaionID(did, identityState),
-			Type: document.StateType,
+			ID:         getRepresentaionID(did, identityState),
+			Type:       document.StateType,
+			Controller: did,
 			IdentityState: document.IdentityState{
 				BlockchainAccountID: resolver.BlockchainID(),
 				Published:           isPublished(identityState.StateInfo),
@@ -209,7 +210,7 @@ func expectedError(err error) (*document.DidResolution, error) {
 func getRepresentaionID(did string, state IdentityState) string {
 	if state.StateInfo != nil && state.StateInfo.State != nil {
 		h, _ := merkletree.NewHashFromBigInt(state.StateInfo.State)
-		return fmt.Sprintf("%s?state=%s", did, h.Hex())
+		return fmt.Sprintf("%s#stateInfo?state=%s", did, h.Hex())
 	}
 	return did
 }
