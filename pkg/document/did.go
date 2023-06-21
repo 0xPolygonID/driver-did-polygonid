@@ -37,8 +37,8 @@ func NewDidResolution() *DidResolution {
 	return &DidResolution{
 		Context: defaultContext,
 		DidDocument: &DidDocument{
-			Context:        []string{defaultDidDocContext, iden3Context},
-			Authentication: []Authentication{},
+			Context:            []string{defaultDidDocContext, iden3Context},
+			VerificationMethod: []VerificationMethod{},
 		},
 		DidResolutionMetadata: &DidResolutionMetadata{
 			ContentType: defaultContentType,
@@ -75,17 +75,18 @@ func NewDidErrorResolution(errCode ErrorCode, errMsg string) *DidResolution {
 	}
 }
 
-type Authentication struct {
-	ID   string `json:"id"`
-	Type string `json:"type"`
+type VerificationMethod struct {
+	ID         string `json:"id"`
+	Type       string `json:"type"`
+	Controller string `json:"controller"`
 	IdentityState
 }
 
 // DidDocument representation of did document.
 type DidDocument struct {
-	Context        []string         `json:"@context"`
-	ID             string           `json:"id"`
-	Authentication []Authentication `json:"authentication"`
+	Context            []string             `json:"@context"`
+	ID                 string               `json:"id"`
+	VerificationMethod []VerificationMethod `json:"verificationMethod"`
 }
 
 // DidResolutionMetadata representation of resolution metadata.
@@ -122,8 +123,8 @@ type GistInfo struct {
 
 // IdentityState representation all info about identity.
 type IdentityState struct {
-	BlockchainAccountID string     `json:"blockchainAccountId"`
-	Published           bool       `json:"published"`
-	Info                *StateInfo `json:"info,omitempty"`
-	Global              *GistInfo  `json:"global,omitempty"`
+	StateContractAddress string     `json:"stateContractAddress"`
+	Published            bool       `json:"published"`
+	Info                 *StateInfo `json:"info,omitempty"`
+	Global               *GistInfo  `json:"global,omitempty"`
 }
