@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/iden3/driver-did-polygonid/pkg/services"
-	core "github.com/iden3/go-iden3-core"
+	core "github.com/iden3/go-iden3-core/v2"
 	"github.com/iden3/go-merkletree-sql/v2"
 	"github.com/pkg/errors"
 )
@@ -31,7 +31,7 @@ func (d *DidDocumentHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	state, err := d.DidDocumentService.GetDidDocument(r.Context(), rawURL[len(rawURL)-1], &opts)
-	if errors.Is(err, core.ErrInvalidDID) {
+	if errors.Is(err, core.ErrIncorrectDID) {
 		log.Println("invalid did:", err)
 
 	} else if err != nil {

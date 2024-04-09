@@ -6,7 +6,7 @@ import (
 	"math/big"
 
 	"github.com/iden3/driver-did-polygonid/pkg/document"
-	core "github.com/iden3/go-iden3-core"
+	"github.com/iden3/go-iden3-core/v2/w3c"
 	"github.com/iden3/go-merkletree-sql/v2"
 	"github.com/pkg/errors"
 )
@@ -24,7 +24,7 @@ type IdentityState struct {
 }
 
 type StateInfo struct {
-	ID                  core.DID
+	ID                  w3c.DID
 	State               *big.Int
 	ReplacedByState     *big.Int
 	CreatedAtTimestamp  *big.Int
@@ -92,7 +92,7 @@ func (gi *GistInfo) ToDidRepresentation() (*document.GistInfo, error) {
 }
 
 type Resolver interface {
-	Resolve(ctx context.Context, did core.DID, opts *ResolverOpts) (IdentityState, error)
+	Resolve(ctx context.Context, did w3c.DID, opts *ResolverOpts) (IdentityState, error)
 	ResolveGist(ctx context.Context, opts *ResolverOpts) (*GistInfo, error)
 	BlockchainID() string
 }
