@@ -9,7 +9,8 @@ on:
 jobs:
   run_e2e:
     env:
-      ETHEREUM_CONTRACT_ADDRESS: "0x134B1BE34911E39A8397ec6289782989729807a4"
+      STATE_CONTRACT_ADDRESS_AMOY: "0x1a4cC30f2aA0377b0c3bc9848766D90cb4404124"
+      STATE_CONTRACT_ADDRESS_MUMBAI: "0x134B1BE34911E39A8397ec6289782989729807a4"
 
     runs-on: ubuntu-20.04
     steps:
@@ -22,9 +23,13 @@ jobs:
       - name: Build file with supported networks
         run: |
           echo -e "polygon:" > resolvers.settings.yaml
+          echo -e "  amoy:" >> resolvers.settings.yaml
+          echo -e "    contractAddress: ${{ env.STATE_CONTRACT_ADDRESS_AMOY }}" >> resolvers.settings.yaml
+          echo -e "    networkURL: ${{ secrets.POLYGON_AMOY_NODE_URL }}" >> resolvers.settings.yaml
           echo -e "  mumbai:" >> resolvers.settings.yaml
-          echo -e "    contractAddress: ${{ env.ETHEREUM_CONTRACT_ADDRESS }}" >> resolvers.settings.yaml
-          echo -e "    networkURL: ${{ secrets.POLYGON_NODE_URL }}" >> resolvers.settings.yaml
+          echo -e "    contractAddress: ${{ env.STATE_CONTRACT_ADDRESS_MUMBAI }}" >> resolvers.settings.yaml
+          echo -e "    networkURL: ${{ secrets.POLYGON_MUMBAI_NODE_URL }}" >> resolvers.settings.yaml
+          
 
       - name: Docker build driver container
         uses: docker/build-push-action@v3

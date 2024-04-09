@@ -5,8 +5,9 @@ on:
 jobs:
   build_driver:
     env:
-      ETHEREUM_CONTRACT_ADDRESS: "0x134B1BE34911E39A8397ec6289782989729807a4"
-      ETHEREUM_CONTRACT_MAINNET_ADDRESS: "0x624ce98D2d27b20b8f8d521723Df8fC4db71D79D"
+      STATE_CONTRACT_ADDRESS_MUMBAI: "0x134B1BE34911E39A8397ec6289782989729807a4"
+      STATE_CONTRACT_ADDRESS_MAIN: "0x624ce98D2d27b20b8f8d521723Df8fC4db71D79D"
+      STATE_CONTRACT_ADDRESS_AMOY: "0x1a4cC30f2aA0377b0c3bc9848766D90cb4404124"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout driver-did-polygonid
@@ -24,12 +25,15 @@ jobs:
         run: |
           cd driver-did-polygonid
           echo -e "polygon:" > resolvers.settings.yaml
+          echo -e "  amoy:" >> resolvers.settings.yaml
+          echo -e "    contractAddress: ${{ env.STATE_CONTRACT_ADDRESS_AMOY }}" >> resolvers.settings.yaml
+          echo -e "    networkURL: ${{ secrets.POLYGON_AMOY_NODE_URL }}" >> resolvers.settings.yaml
           echo -e "  mumbai:" >> resolvers.settings.yaml
-          echo -e "    contractAddress: ${{ env.ETHEREUM_CONTRACT_ADDRESS }}" >> resolvers.settings.yaml
-          echo -e "    networkURL: ${{ secrets.POLYGON_NODE_URL }}" >> resolvers.settings.yaml
+          echo -e "    contractAddress: ${{ env.STATE_CONTRACT_ADDRESS_MUMBAI }}" >> resolvers.settings.yaml
+          echo -e "    networkURL: ${{ secrets.POLYGON_MUMBAI_NODE_URL }}" >> resolvers.settings.yaml
           echo -e "  main:" >> resolvers.settings.yaml
-          echo -e "    contractAddress: ${{ env.ETHEREUM_CONTRACT_MAINNET_ADDRESS }}" >> resolvers.settings.yaml
-          echo -e "    networkURL: ${{ secrets.POLYGON_MAINET_NODE_URL }}" >> resolvers.settings.yaml
+          echo -e "    contractAddress: ${{ env.STATE_CONTRACT_ADDRESS_MAIN }}" >> resolvers.settings.yaml
+          echo -e "    networkURL: ${{ secrets.POLYGON_MAIN_NODE_URL }}" >> resolvers.settings.yaml
 
       - name: Set up Docker Buildx
         id: buildx
