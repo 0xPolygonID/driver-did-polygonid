@@ -36,7 +36,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"did_metadata\":{\n        \"method\": \"polygonid\",\n        \"blockchain\":\"polygon\",\n        \"network\": \"amoy\"\n    }\n}",
+					"raw": "{\n    \"did_metadata\":{\n        \"method\": \"polygonid\",\n        \"blockchain\":\"polygon\",\n        \"network\": \"mumbai\"\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -87,7 +87,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"did_metadata\":{\n        \"method\": \"polygonid\",\n        \"blockchain\":\"polygon\",\n        \"network\": \"amoy\"\n    }\n}",
+					"raw": "{\n    \"did_metadata\":{\n        \"method\": \"polygonid\",\n        \"blockchain\":\"polygon\",\n        \"network\": \"mumbai\"\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
