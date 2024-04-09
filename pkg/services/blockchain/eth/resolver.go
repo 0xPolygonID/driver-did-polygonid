@@ -11,7 +11,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/iden3/contracts-abi/state/go/abi"
 	"github.com/iden3/driver-did-polygonid/pkg/services"
-	core "github.com/iden3/go-iden3-core"
+	core "github.com/iden3/go-iden3-core/v2"
+	"github.com/iden3/go-iden3-core/v2/w3c"
 )
 
 //go:generate mockgen -destination=contract/mock/contract.go . StateContract
@@ -95,7 +96,7 @@ func (r *Resolver) ResolveGist(
 
 func (r *Resolver) Resolve(
 	ctx context.Context,
-	did core.DID,
+	did w3c.DID,
 	opts *services.ResolverOpts,
 ) (services.IdentityState, error) {
 	if opts.GistRoot != nil && opts.State != nil {
@@ -109,13 +110,19 @@ func (r *Resolver) Resolve(
 		err       error
 	)
 
+	userID, err := core.IDFromDID(did)
+	if err != nil {
+		return services.IdentityState{},
+			fmt.Errorf("invalid did format for did '%s': %v", did, err)
+	}
+
 	switch {
 	case opts.GistRoot != nil:
-		stateInfo, gistInfo, err = r.resolveStateByGistRoot(ctx, did.ID, opts.GistRoot)
+		stateInfo, gistInfo, err = r.resolveStateByGistRoot(ctx, userID, opts.GistRoot)
 	case opts.State != nil:
-		stateInfo, err = r.resolveState(ctx, did.ID, opts.State)
+		stateInfo, err = r.resolveState(ctx, userID, opts.State)
 	default:
-		stateInfo, gistInfo, err = r.resolveLatest(ctx, did.ID)
+		stateInfo, gistInfo, err = r.resolveLatest(ctx, userID)
 	}
 
 	identityState := services.IdentityState{}

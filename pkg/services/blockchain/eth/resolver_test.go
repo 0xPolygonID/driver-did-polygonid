@@ -10,12 +10,13 @@ import (
 	"github.com/iden3/contracts-abi/state/go/abi"
 	"github.com/iden3/driver-did-polygonid/pkg/services"
 	cm "github.com/iden3/driver-did-polygonid/pkg/services/blockchain/eth/contract/mock"
-	core "github.com/iden3/go-iden3-core"
+	core "github.com/iden3/go-iden3-core/v2"
+	"github.com/iden3/go-iden3-core/v2/w3c"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
-var userDID, _ = core.ParseDID("did:polygonid:polygon:mumbai:2qJEaVmT5jBrtgBQ4m7b7bRYzWmvMyDjBZGP24QwvD")
+var userDID, _ = w3c.ParseDID("did:polygonid:polygon:mumbai:2qJEaVmT5jBrtgBQ4m7b7bRYzWmvMyDjBZGP24QwvD")
 
 func TestResolveGist_Success(t *testing.T) {
 	tests := []struct {
@@ -72,7 +73,7 @@ func TestResolve_Success(t *testing.T) {
 	tests := []struct {
 		name                  string
 		opts                  *services.ResolverOpts
-		userDID               *core.DID
+		userDID               *w3c.DID
 		contractMock          func(c *cm.MockStateContract)
 		expectedIdentityState services.IdentityState
 	}{
@@ -88,10 +89,11 @@ func TestResolve_Success(t *testing.T) {
 					Existence: true,
 					Value:     big.NewInt(5),
 				}
-				c.EXPECT().GetGISTProofByRoot(gomock.Any(), userDID.ID.BigInt(), big.NewInt(1)).Return(proof, nil)
+				userID, _ := core.IDFromDID(*userDID)
+				c.EXPECT().GetGISTProofByRoot(gomock.Any(), userID.BigInt(), big.NewInt(1)).Return(proof, nil)
 				gistInfo := abi.IStateGistRootInfo{Root: big.NewInt(555)}
 				c.EXPECT().GetGISTRootInfo(gomock.Any(), big.NewInt(4)).Return(gistInfo, nil)
-				stateInfo := abi.IStateStateInfo{Id: userDID.ID.BigInt(), State: big.NewInt(444)}
+				stateInfo := abi.IStateStateInfo{Id: userID.BigInt(), State: big.NewInt(444)}
 				c.EXPECT().GetStateInfoByIdAndState(gomock.Any(), gomock.Any(), big.NewInt(5)).Return(stateInfo, nil)
 			},
 			expectedIdentityState: services.IdentityState{
@@ -111,7 +113,8 @@ func TestResolve_Success(t *testing.T) {
 			},
 			userDID: userDID,
 			contractMock: func(c *cm.MockStateContract) {
-				res := abi.IStateStateInfo{Id: userDID.ID.BigInt(), State: big.NewInt(555)}
+				userID, _ := core.IDFromDID(*userDID)
+				res := abi.IStateStateInfo{Id: userID.BigInt(), State: big.NewInt(555)}
 				c.EXPECT().GetStateInfoByIdAndState(gomock.Any(), gomock.Any(), big.NewInt(1)).Return(res, nil)
 			},
 			expectedIdentityState: services.IdentityState{
@@ -127,12 +130,13 @@ func TestResolve_Success(t *testing.T) {
 			opts:    &services.ResolverOpts{},
 			userDID: userDID,
 			contractMock: func(c *cm.MockStateContract) {
+				userID, _ := core.IDFromDID(*userDID)
 				latestGist := big.NewInt(100)
 				c.EXPECT().GetGISTRoot(gomock.Any()).Return(latestGist, nil)
 				latestGistInfo := abi.IStateGistRootInfo{Root: big.NewInt(400)}
 				c.EXPECT().GetGISTRootInfo(gomock.Any(), latestGist).Return(latestGistInfo, nil)
-				stateInfo := abi.IStateStateInfo{Id: userDID.ID.BigInt(), State: big.NewInt(555)}
-				c.EXPECT().GetStateInfoById(gomock.Any(), userDID.ID.BigInt()).Return(stateInfo, nil)
+				stateInfo := abi.IStateStateInfo{Id: userID.BigInt(), State: big.NewInt(555)}
+				c.EXPECT().GetStateInfoById(gomock.Any(), userID.BigInt()).Return(stateInfo, nil)
 			},
 			expectedIdentityState: services.IdentityState{
 				StateInfo: &services.StateInfo{

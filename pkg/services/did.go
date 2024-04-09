@@ -8,7 +8,8 @@ import (
 
 	"github.com/iden3/driver-did-polygonid/pkg/document"
 	"github.com/iden3/driver-did-polygonid/pkg/services/ens"
-	core "github.com/iden3/go-iden3-core"
+	core "github.com/iden3/go-iden3-core/v2"
+	"github.com/iden3/go-iden3-core/v2/w3c"
 	"github.com/pkg/errors"
 )
 
@@ -36,13 +37,31 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 		opts = &ResolverOpts{}
 	}
 
-	userDID, err := core.ParseDID(did)
+	userDID, err := w3c.ParseDID(did)
 	errResolution, err := expectedError(err)
 	if err != nil {
 		return errResolution, err
 	}
 
-	resolver, err := d.resolvers.GetResolverByNetwork(string(userDID.Blockchain), string(userDID.NetworkID))
+	userID, err := core.IDFromDID(*userDID)
+	errResolution, err = expectedError(err)
+	if err != nil {
+		return errResolution, err
+	}
+
+	b, err := core.BlockchainFromID(userID)
+	errResolution, err = expectedError(err)
+	if err != nil {
+		return errResolution, err
+	}
+
+	n, err := core.NetworkIDFromID(userID)
+	errResolution, err = expectedError(err)
+	if err != nil {
+		return errResolution, err
+	}
+
+	resolver, err := d.resolvers.GetResolverByNetwork(string(b), string(n))
 	errResolution, err = expectedError(err)
 	if err != nil {
 		return errResolution, err
@@ -50,7 +69,7 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 
 	identityState, err := resolver.Resolve(ctx, *userDID, opts)
 	if errors.Is(err, ErrNotFound) && (opts.State != nil || opts.GistRoot != nil) {
-		gen, errr := isGenesis(userDID.ID.BigInt(), opts.State)
+		gen, errr := isGenesis(userID.BigInt(), opts.State)
 		if errr != nil {
 			return nil, fmt.Errorf("invalid state: %v", errr)
 		}
@@ -102,12 +121,12 @@ func (d *DidDocumentServices) ResolveDNSDomain(ctx context.Context, domain strin
 	}
 
 	var (
-		did *core.DID
+		did *w3c.DID
 		v   string
 	)
 	// try to find correct did.
 	for _, v = range records {
-		did, err = core.ParseDID(v)
+		did, err = w3c.ParseDID(v)
 		if did != nil && err == nil {
 			break
 		}
@@ -167,25 +186,12 @@ func isGenesis(id, state *big.Int) (bool, error) {
 		return false, nil
 	}
 
-	userID, err := core.IDFromInt(id)
-	if err != nil {
-		return false, err
-	}
-	userDID, err := core.ParseDIDFromID(userID)
+	isGenesis, err := core.CheckGenesisStateID(id, state)
 	if err != nil {
 		return false, err
 	}
 
-	didType, err := core.BuildDIDType(userDID.Method, userDID.Blockchain, userDID.NetworkID)
-	if err != nil {
-		return false, err
-	}
-	identifier, err := core.IdGenesisFromIdenState(didType, state)
-	if err != nil {
-		return false, err
-	}
-
-	return id.Cmp(identifier.BigInt()) == 0, nil
+	return isGenesis, nil
 }
 
 func expectedError(err error) (*document.DidResolution, error) {
@@ -193,13 +199,15 @@ func expectedError(err error) (*document.DidResolution, error) {
 		return nil, nil
 	}
 
-	if errors.Is(err, core.ErrInvalidDID) {
+	switch {
+	case errors.Is(err, core.ErrIncorrectDID):
 		return document.NewDidInvalidResolution(err.Error()), err
-	}
-	if errors.Is(err, core.ErrNetworkNotSupportedForDID) {
+	case
+		errors.Is(err, core.ErrBlockchainNotSupportedForDID),
+		errors.Is(err, core.ErrNetworkNotSupportedForDID):
+
 		return document.NewNetworkNotSupportedForDID(err.Error()), err
-	}
-	if errors.Is(err, core.ErrDIDMethodNotSupported) {
+	case errors.Is(err, core.ErrDIDMethodNotSupported):
 		return document.NewDidMethodNotSupportedResolution(err.Error()), err
 	}
 
