@@ -42,12 +42,11 @@ jobs:
           cache-to: type=gha
 
       - name: polygonid-did-driver
-        run: docker run -p 8080:8080 -d --name polygonid-did-driver polygonid-did-driver:develop
-
-      - name: logs
-        run: docker logs polygonid-did-driver
+        run: docker run -p 8080:8080 -d --network host --name polygonid-did-driver polygonid-did-driver:develop
 
       - name: Readiness probe for issuer service
+        id: readiness
+        continue-on-error: true
         run: >
           curl --connect-timeout 5
           --max-time 10
@@ -55,6 +54,9 @@ jobs:
           --retry-max-time 120
           --retry-connrefused
           'http://localhost:8080/status'
+      
+      - name: logs
+        run: docker logs polygonid-did-driver
 
       # TESTS
       - name: Run Newman e2e
