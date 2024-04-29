@@ -37,15 +37,15 @@ jobs:
           context: .
           file: Dockerfile
           load: true
-          tags: iden3-did-driver:develop
+          tags: polygonid-did-driver:develop
           cache-from: type=gha
           cache-to: type=gha
 
-      - name: iden3-did-driver
-        run: docker run -p 8080:8080 -d --network host --name iden3-did-driver iden3-did-driver:develop
+      - name: polygonid-did-driver
+        run: docker run -p 8080:8080 -d --name polygonid-did-driver polygonid-did-driver:develop
 
       - name: logs
-        run: docker logs iden3-did-driver
+        run: docker logs polygonid-did-driver
 
       - name: Readiness probe for issuer service
         run: >
