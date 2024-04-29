@@ -10,7 +10,6 @@ jobs:
   run_e2e:
     env:
       STATE_CONTRACT_ADDRESS_AMOY: "0x1a4cC30f2aA0377b0c3bc9848766D90cb4404124"
-      STATE_CONTRACT_ADDRESS_MUMBAI: "0x134B1BE34911E39A8397ec6289782989729807a4"
 
     runs-on: ubuntu-20.04
     steps:
@@ -26,10 +25,6 @@ jobs:
           echo -e "  amoy:" >> resolvers.settings.yaml
           echo -e "    contractAddress: ${{ env.STATE_CONTRACT_ADDRESS_AMOY }}" >> resolvers.settings.yaml
           echo -e "    networkURL: ${{ secrets.POLYGON_AMOY_NODE_URL }}" >> resolvers.settings.yaml
-          echo -e "  mumbai:" >> resolvers.settings.yaml
-          echo -e "    contractAddress: ${{ env.STATE_CONTRACT_ADDRESS_MUMBAI }}" >> resolvers.settings.yaml
-          echo -e "    networkURL: ${{ secrets.POLYGON_MUMBAI_NODE_URL }}" >> resolvers.settings.yaml
-          
 
       - name: Docker build driver container
         uses: docker/build-push-action@v3
@@ -37,15 +32,15 @@ jobs:
           context: .
           file: Dockerfile
           load: true
-          tags: iden3-did-driver:develop
+          tags: polygonid-did-driver:develop
           cache-from: type=gha
           cache-to: type=gha
 
-      - name: iden3-did-driver
-        run: docker run -p 8080:8080 -d --network host --name iden3-did-driver iden3-did-driver:develop
+      - name: polygonid-did-driver
+        run: docker run -p 8080:8080 -d --network host --name polygonid-did-driver polygonid-did-driver:develop
 
       - name: logs
-        run: docker logs iden3-did-driver
+        run: docker logs polygonid-did-driver
 
       - name: Readiness probe for issuer service
         run: >
