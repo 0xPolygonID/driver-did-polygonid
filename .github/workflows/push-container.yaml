@@ -1,11 +1,12 @@
 name: Publish driver-did-polygonid
 on:
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
   build_driver:
     env:
-      STATE_CONTRACT_ADDRESS_MUMBAI: "0x134B1BE34911E39A8397ec6289782989729807a4"
       STATE_CONTRACT_ADDRESS_MAIN: "0x624ce98D2d27b20b8f8d521723Df8fC4db71D79D"
       STATE_CONTRACT_ADDRESS_AMOY: "0x1a4cC30f2aA0377b0c3bc9848766D90cb4404124"
     runs-on: ubuntu-latest
@@ -28,9 +29,6 @@ jobs:
           echo -e "  amoy:" >> resolvers.settings.yaml
           echo -e "    contractAddress: ${{ env.STATE_CONTRACT_ADDRESS_AMOY }}" >> resolvers.settings.yaml
           echo -e "    networkURL: ${{ secrets.POLYGON_AMOY_NODE_URL }}" >> resolvers.settings.yaml
-          echo -e "  mumbai:" >> resolvers.settings.yaml
-          echo -e "    contractAddress: ${{ env.STATE_CONTRACT_ADDRESS_MUMBAI }}" >> resolvers.settings.yaml
-          echo -e "    networkURL: ${{ secrets.POLYGON_MUMBAI_NODE_URL }}" >> resolvers.settings.yaml
           echo -e "  main:" >> resolvers.settings.yaml
           echo -e "    contractAddress: ${{ env.STATE_CONTRACT_ADDRESS_MAIN }}" >> resolvers.settings.yaml
           echo -e "    networkURL: ${{ secrets.POLYGON_MAIN_NODE_URL }}" >> resolvers.settings.yaml
@@ -40,13 +38,9 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: build and deploy to DockerHub
-        env:
-          GITHUB_REF: ${{github.ref}}
         run: |
-          ref="$(echo ${GITHUB_REF} | cut -d'/' -f3)"
-          echo GITHUB_REF - $ref
           cd driver-did-polygonid && \
           docker buildx build --push \
            --platform linux/amd64,linux/arm64 \
-           -t polygonid/driver-did-polygonid:${ref} \
+           -t polygonid/driver-did-polygonid:${{ github.ref_name }} \
            -t polygonid/driver-did-polygonid:latest .
