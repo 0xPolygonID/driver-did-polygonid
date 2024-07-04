@@ -6,9 +6,9 @@ Driver for the polygonid DID method.
 1. Create file `resolvers.settings.yaml` with resolver settings:
     ```yaml
     polygon:
-        mumbai:
-            contractAddress: "0xf6..."
-            networkURL: "https://polygon-mumbai..."
+        amoy:
+            contractAddress: "0x1a4cC30f2aA0377b0c3bc9848766D90cb4404124"
+            networkURL: "https://polygon-amoy..."
     ```
 2. Build docker container:
     ```bash
@@ -23,9 +23,9 @@ Driver for the polygonid DID method.
 1. Create file `resolvers.settings.yaml` with resolver settings:
     ```yaml
     polygon:
-        mumbai:
-            contractAddress: "0x134B1BE34911E39A8397ec6289782989729807a4"
-            networkURL: "<POLYGON_MUMBAI_RPC_URL>"
+        amoy:
+            contractAddress: "0x1a4cC30f2aA0377b0c3bc9848766D90cb4404124"
+            networkURL: "<POLYGON_AMOY_RPC_URL>"
     ```
 2. Build docker container:
     ```bash
