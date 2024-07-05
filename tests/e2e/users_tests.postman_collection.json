@@ -34,7 +34,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDj9EDytmvtQP1or3FxykXGEaqSA1ss479MYHDMJc?state=ab46115ca11bc069e6d77202d857420b5215d260bcb2ff33d005df9bda816306",
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:amoy:2qR3ufJ84dtdHp4hokxH9tG3E3SzLdyBcjdmEz6NH1?state=bc4c42a731152f7c76c5616b59d82fb413d77781d26cb52967e837de85788416",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -43,12 +43,12 @@
 					"path": [
 						"1.0",
 						"identifiers",
-						"did:polygonid:polygon:mumbai:2qDj9EDytmvtQP1or3FxykXGEaqSA1ss479MYHDMJc"
+						"did:polygonid:polygon:amoy:2qR3ufJ84dtdHp4hokxH9tG3E3SzLdyBcjdmEz6NH1"
 					],
 					"query": [
 						{
 							"key": "state",
-							"value": "ab46115ca11bc069e6d77202d857420b5215d260bcb2ff33d005df9bda816306"
+							"value": "bc4c42a731152f7c76c5616b59d82fb413d77781d26cb52967e837de85788416"
 						}
 					]
 				}
@@ -84,7 +84,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDj9EDytmvtQP1or3FxykXGEaqSA1ss479MYHDMJc",
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:amoy:2qR3ufJ84dtdHp4hokxH9tG3E3SzLdyBcjdmEz6NH1",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -93,7 +93,7 @@
 					"path": [
 						"1.0",
 						"identifiers",
-						"did:polygonid:polygon:mumbai:2qDj9EDytmvtQP1or3FxykXGEaqSA1ss479MYHDMJc"
+						"did:polygonid:polygon:amoy:2qR3ufJ84dtdHp4hokxH9tG3E3SzLdyBcjdmEz6NH1"
 					]
 				}
 			},
@@ -122,7 +122,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDj9EDytmvtQP1or3FxykXGEaqSA1ss479MYHDMJc?gist=08f68a505fc16b2e95e52edaba0880ac3f72b42494b9777968400c3a261e7f01",
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:amoy:2qR3ufJ84dtdHp4hokxH9tG3E3SzLdyBcjdmEz6NH1?gist=e1421e1e9bb8d06dd1d8b190091adab9ff34ab99b5711b5941c5a80b412cc40e",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -131,12 +131,12 @@
 					"path": [
 						"1.0",
 						"identifiers",
-						"did:polygonid:polygon:mumbai:2qDj9EDytmvtQP1or3FxykXGEaqSA1ss479MYHDMJc"
+						"did:polygonid:polygon:amoy:2qR3ufJ84dtdHp4hokxH9tG3E3SzLdyBcjdmEz6NH1"
 					],
 					"query": [
 						{
 							"key": "gist",
-							"value": "08f68a505fc16b2e95e52edaba0880ac3f72b42494b9777968400c3a261e7f01"
+							"value": "e1421e1e9bb8d06dd1d8b190091adab9ff34ab99b5711b5941c5a80b412cc40e"
 						}
 					]
 				}
@@ -174,7 +174,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x",
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:amoy:2qY71pSkdCsRetTHbUA4YqG7Hx63Ej2PeiJMzAdJ2V",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -183,7 +183,7 @@
 					"path": [
 						"1.0",
 						"identifiers",
-						"did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x"
+						"did:polygonid:polygon:amoy:2qY71pSkdCsRetTHbUA4YqG7Hx63Ej2PeiJMzAdJ2V"
 					]
 				}
 			},
@@ -221,7 +221,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x?state=a637414036aeca62e04e28e6c5c3fdb2147743edd31ccd825df491122aeee521",
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:amoy:2qY71pSkdCsRetTHbUA4YqG7Hx63Ej2PeiJMzAdJ2V?state=9a73b7f0f5f0a9b5e2dab8bdcecf4fa003ef531c1c61307c79483d51f5474c1e",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -230,12 +230,12 @@
 					"path": [
 						"1.0",
 						"identifiers",
-						"did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x"
+						"did:polygonid:polygon:amoy:2qY71pSkdCsRetTHbUA4YqG7Hx63Ej2PeiJMzAdJ2V"
 					],
 					"query": [
 						{
 							"key": "state",
-							"value": "a637414036aeca62e04e28e6c5c3fdb2147743edd31ccd825df491122aeee521"
+							"value": "9a73b7f0f5f0a9b5e2dab8bdcecf4fa003ef531c1c61307c79483d51f5474c1e"
 						}
 					]
 				}
@@ -274,7 +274,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x?gist=3e0cbeb1c5262b100b38eda2b4d1c45a1146e1960dbc230deb773aa6125f1a21",
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:amoy:2qY71pSkdCsRetTHbUA4YqG7Hx63Ej2PeiJMzAdJ2V?gist=b34ff91e0a244db80ad516a1affa537ad0af62fe3ffc8255ecf1db446b17e917",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -283,12 +283,12 @@
 					"path": [
 						"1.0",
 						"identifiers",
-						"did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x"
+						"did:polygonid:polygon:amoy:2qY71pSkdCsRetTHbUA4YqG7Hx63Ej2PeiJMzAdJ2V"
 					],
 					"query": [
 						{
 							"key": "gist",
-							"value": "3e0cbeb1c5262b100b38eda2b4d1c45a1146e1960dbc230deb773aa6125f1a21"
+							"value": "b34ff91e0a244db80ad516a1affa537ad0af62fe3ffc8255ecf1db446b17e917"
 						}
 					]
 				}
@@ -330,7 +330,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x?state=39286e846f1198b99fa2cf7b4e5ce6ee7ed71df71cb98be19daeb935f0f0a30c",
+					"raw": "http://localhost:8080/1.0/identifiers/did:polygonid:polygon:amoy:2qY71pSkdCsRetTHbUA4YqG7Hx63Ej2PeiJMzAdJ2V?state=21c89984e3b08f735f1da0443b0aa4afe92c400c1d33dfb6867662360328fd0d",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -339,12 +339,12 @@
 					"path": [
 						"1.0",
 						"identifiers",
-						"did:polygonid:polygon:mumbai:2qDGQPzdY27pvdeRxXdxthQ35K6grzrGtTm4xRUa7x"
+						"did:polygonid:polygon:amoy:2qY71pSkdCsRetTHbUA4YqG7Hx63Ej2PeiJMzAdJ2V"
 					],
 					"query": [
 						{
 							"key": "state",
-							"value": "39286e846f1198b99fa2cf7b4e5ce6ee7ed71df71cb98be19daeb935f0f0a30c"
+							"value": "21c89984e3b08f735f1da0443b0aa4afe92c400c1d33dfb6867662360328fd0d"
 						}
 					]
 				}
