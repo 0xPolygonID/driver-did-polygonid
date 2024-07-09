@@ -2,6 +2,8 @@ package document
 
 import (
 	"time"
+
+	"github.com/iden3/go-schema-processor/v2/verifiable"
 )
 
 type ErrorCode string
@@ -12,7 +14,8 @@ const (
 	ErrNotFound           ErrorCode = "notFound"
 	ErrUnknownNetwork     ErrorCode = "unknownNetwork"
 
-	StateType = "Iden3StateInfo2023"
+	StateType                            = "Iden3StateInfo2023"
+	EcdsaSecp256k1RecoveryMethod2020Type = "EcdsaSecp256k1RecoveryMethod2020"
 )
 
 const (
@@ -24,8 +27,8 @@ const (
 
 // DidResolution representation of did resolution.
 type DidResolution struct {
-	Context     string       `json:"@context,omitempty"`
-	DidDocument *DidDocument `json:"didDocument"`
+	Context     string                  `json:"@context,omitempty"`
+	DidDocument *verifiable.DIDDocument `json:"didDocument"`
 	// should exist in responses, but can be empty.
 	// https://www.w3.org/TR/did-core/#did-resolution
 	DidResolutionMetadata *DidResolutionMetadata `json:"didResolutionMetadata"`
@@ -36,9 +39,9 @@ type DidResolution struct {
 func NewDidResolution() *DidResolution {
 	return &DidResolution{
 		Context: defaultContext,
-		DidDocument: &DidDocument{
+		DidDocument: &verifiable.DIDDocument{
 			Context:            []string{defaultDidDocContext, iden3Context},
-			VerificationMethod: []VerificationMethod{},
+			VerificationMethod: []verifiable.CommonVerificationMethod{},
 		},
 		DidResolutionMetadata: &DidResolutionMetadata{
 			ContentType: defaultContentType,
@@ -75,20 +78,6 @@ func NewDidErrorResolution(errCode ErrorCode, errMsg string) *DidResolution {
 	}
 }
 
-type VerificationMethod struct {
-	ID         string `json:"id"`
-	Type       string `json:"type"`
-	Controller string `json:"controller"`
-	IdentityState
-}
-
-// DidDocument representation of did document.
-type DidDocument struct {
-	Context            []string             `json:"@context"`
-	ID                 string               `json:"id"`
-	VerificationMethod []VerificationMethod `json:"verificationMethod"`
-}
-
 // DidResolutionMetadata representation of resolution metadata.
 type DidResolutionMetadata struct {
 	Error       ErrorCode `json:"error,omitempty"`
@@ -99,32 +88,3 @@ type DidResolutionMetadata struct {
 
 // DidDocumentMetadata metadata of did document.
 type DidDocumentMetadata struct{}
-
-// StateInfo representation state of identity.
-type StateInfo struct {
-	ID                  string `json:"id"`
-	State               string `json:"state"`
-	ReplacedByState     string `json:"replacedByState"`
-	CreatedAtTimestamp  string `json:"createdAtTimestamp"`
-	ReplacedAtTimestamp string `json:"replacedAtTimestamp"`
-	CreatedAtBlock      string `json:"createdAtBlock"`
-	ReplacedAtBlock     string `json:"replacedAtBlock"`
-}
-
-// GistInfo representation state of gist root.
-type GistInfo struct {
-	Root                string `json:"root"`
-	ReplacedByRoot      string `json:"replacedByRoot"`
-	CreatedAtTimestamp  string `json:"createdAtTimestamp"`
-	ReplacedAtTimestamp string `json:"replacedAtTimestamp"`
-	CreatedAtBlock      string `json:"createdAtBlock"`
-	ReplacedAtBlock     string `json:"replacedAtBlock"`
-}
-
-// IdentityState representation all info about identity.
-type IdentityState struct {
-	StateContractAddress string     `json:"stateContractAddress"`
-	Published            bool       `json:"published"`
-	Info                 *StateInfo `json:"info,omitempty"`
-	Global               *GistInfo  `json:"global,omitempty"`
-}

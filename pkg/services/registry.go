@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/iden3/driver-did-polygonid/pkg/document"
 	"github.com/iden3/go-iden3-core/v2/w3c"
 	"github.com/iden3/go-merkletree-sql/v2"
+	"github.com/iden3/go-schema-processor/v2/verifiable"
 	"github.com/pkg/errors"
 )
 
@@ -33,7 +33,7 @@ type StateInfo struct {
 	ReplacedAtBlock     *big.Int
 }
 
-func (si *StateInfo) ToDidRepresentation() (*document.StateInfo, error) {
+func (si *StateInfo) ToDidRepresentation() (*verifiable.StateInfo, error) {
 	if si == nil {
 		return nil, nil
 	}
@@ -46,7 +46,7 @@ func (si *StateInfo) ToDidRepresentation() (*document.StateInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &document.StateInfo{
+	return &verifiable.StateInfo{
 		ID:                  si.ID.String(),
 		State:               stateHash.Hex(),
 		ReplacedByState:     replacedHash.Hex(),
@@ -66,7 +66,7 @@ type GistInfo struct {
 	ReplacedAtBlock     *big.Int
 }
 
-func (gi *GistInfo) ToDidRepresentation() (*document.GistInfo, error) {
+func (gi *GistInfo) ToDidRepresentation() (*verifiable.GistInfo, error) {
 	if gi == nil {
 		return nil, nil
 	}
@@ -81,7 +81,7 @@ func (gi *GistInfo) ToDidRepresentation() (*document.GistInfo, error) {
 		return nil, err
 	}
 
-	return &document.GistInfo{
+	return &verifiable.GistInfo{
 		Root:                rootHash.Hex(),
 		ReplacedByRoot:      replacedHash.Hex(),
 		CreatedAtTimestamp:  gi.CreatedAtTimestamp.String(),
