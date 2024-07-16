@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/iden3/driver-did-polygonid/pkg/document"
 	"github.com/iden3/driver-did-polygonid/pkg/services/ens"
@@ -123,10 +124,39 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 				Published: &isPublished,
 				Info:      info,
 				Global:    gist,
-				Signature: identityState.Signature,
 			},
 		},
 	)
+
+	walletAddress, err := resolver.WalletAddress()
+
+	if err == nil {
+		stateInfoState := ""
+		gistInfoRoot := ""
+		if identityState.StateInfo != nil {
+			stateInfoState = identityState.StateInfo.State.String()
+		}
+
+		if identityState.GistInfo != nil {
+			gistInfoRoot = identityState.GistInfo.Root.String()
+		}
+
+		eip712TypedData, err := resolver.TypedData(*userDID, stateInfoState, gistInfoRoot, walletAddress)
+		if err != nil {
+			return nil, fmt.Errorf("invalid typed data: %v", err)
+		}
+
+		eip712Proof := &document.EthereumEip712SignatureProof2021{
+			Type:               document.EthereumEip712SignatureProof2021Type,
+			ProofPursopose:     "assertionMethod",
+			ProofValue:         identityState.Signature,
+			VerificationMethod: fmt.Sprintf("did:pkh:eip155:%s:%s#blockchainAccountId", strings.Split(chainIDStateAddress, ":")[0], walletAddress),
+			Eip712:             eip712TypedData,
+			Created:            time.Now(),
+		}
+
+		didResolution.DidResolutionMetadata.Proof = append(didResolution.DidResolutionMetadata.Proof, eip712Proof)
+	}
 
 	return didResolution, nil
 }

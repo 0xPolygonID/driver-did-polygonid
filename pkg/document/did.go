@@ -80,10 +80,11 @@ func NewDidErrorResolution(errCode ErrorCode, errMsg string) *DidResolution {
 
 // DidResolutionMetadata representation of resolution metadata.
 type DidResolutionMetadata struct {
-	Error       ErrorCode `json:"error,omitempty"`
-	Message     string    `json:"message,omitempty"`
-	ContentType string    `json:"contentType,omitempty"`
-	Retrieved   time.Time `json:"retrieved,omitempty"`
+	Error       ErrorCode           `json:"error,omitempty"`
+	Message     string              `json:"message,omitempty"`
+	ContentType string              `json:"contentType,omitempty"`
+	Retrieved   time.Time           `json:"retrieved,omitempty"`
+	Proof       DidResolutionProofs `json:"proof,omitempty"`
 }
 
 // DidDocumentMetadata metadata of did document.

@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -95,6 +94,27 @@ func NewResolver(url, address, walletKey string) (*Resolver, error) {
 
 func (r *Resolver) BlockchainID() string {
 	return fmt.Sprintf("%d:%s", r.chainID, r.contractAddress)
+}
+
+func (r *Resolver) WalletAddress() (string, error) {
+	if r.walletKey == "" {
+		return "", errors.New("wallet key is not set")
+	}
+
+	privateKey, err := crypto.HexToECDSA(r.walletKey)
+	if err != nil {
+		return "", err
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return "", errors.New("error casting public key to ECDSA")
+	}
+
+	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	return walletAddress.String(), nil
 }
 
 func (r *Resolver) ResolveGist(
@@ -187,7 +207,7 @@ func (r *Resolver) Resolve(
 
 	signature := ""
 	if r.walletKey != "" {
-		signature, err = r.signTypedData(userID.BigInt().String(), stateInfoState, gistInfoRoot)
+		signature, err = r.signTypedData(did, stateInfoState, gistInfoRoot)
 		if err != nil {
 			return services.IdentityState{}, err
 		}
@@ -205,11 +225,6 @@ func (r *Resolver) VerifyIdentityState(
 	identityState services.IdentityState,
 	did w3c.DID,
 ) (bool, error) {
-	userID, err := core.IDFromDID(did)
-	if err != nil {
-		return false,
-			fmt.Errorf("invalid did format for did '%s': %v", identityState.StateInfo.ID, err)
-	}
 	privateKey, err := crypto.HexToECDSA(r.walletKey)
 	if err != nil {
 		return false, err
@@ -231,13 +246,23 @@ func (r *Resolver) VerifyIdentityState(
 		gistInfoRoot = identityState.GistInfo.Root.String()
 	}
 
-	typedData := r.getTypedData(userID.BigInt().String(), stateInfoState, gistInfoRoot, walletAddress.String())
+	typedData, err := r.TypedData(did, stateInfoState, gistInfoRoot, walletAddress.String())
+	if err != nil {
+		return false, err
+	}
 
 	authData := AuthData{TypedData: typedData, Signature: identityState.Signature, Address: walletAddress.String()}
 	return r.verifyTypedData(authData)
 }
 
-func (r *Resolver) getTypedData(identity string, state string, gistRoot string, walletAddress string) apitypes.TypedData {
+func (r *Resolver) TypedData(did w3c.DID, state string, gistRoot string, walletAddress string) (apitypes.TypedData, error) {
+	userID, err := core.IDFromDID(did)
+	if err != nil {
+		return apitypes.TypedData{},
+			fmt.Errorf("invalid did format for did '%s': %v", did, err)
+	}
+	identity := userID.BigInt().String()
+
 	salt := "resolver-123"
 
 	typedData := apitypes.TypedData{
@@ -257,10 +282,10 @@ func (r *Resolver) getTypedData(identity string, state string, gistRoot string, 
 		},
 	}
 
-	return typedData
+	return typedData, nil
 }
 
-func (r *Resolver) signTypedData(identity string, state string, gistRoot string) (string, error) {
+func (r *Resolver) signTypedData(did w3c.DID, state string, gistRoot string) (string, error) {
 	privateKey, err := crypto.HexToECDSA(r.walletKey)
 	if err != nil {
 		return "", err
@@ -274,7 +299,7 @@ func (r *Resolver) signTypedData(identity string, state string, gistRoot string)
 
 	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
-	typedData := r.getTypedData(identity, state, gistRoot, walletAddress.String())
+	typedData, err := r.TypedData(did, state, gistRoot, walletAddress.String())
 
 	domainSeparator, err := typedData.HashStruct("EIP712Domain", typedData.Domain.Map())
 	if err != nil {
@@ -302,7 +327,6 @@ func (r *Resolver) signTypedData(identity string, state string, gistRoot string)
 func (r *Resolver) verifyTypedData(authData AuthData) (bool, error) {
 	signature, err := hexutil.Decode(authData.Signature)
 	if err != nil {
-		log.Println("Error %w", err)
 		return false, fmt.Errorf("decode signature: %w", err)
 	}
 

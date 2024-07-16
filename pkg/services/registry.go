@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 	"github.com/iden3/go-iden3-core/v2/w3c"
 	"github.com/iden3/go-merkletree-sql/v2"
 	"github.com/iden3/go-schema-processor/v2/verifiable"
@@ -96,6 +97,8 @@ type Resolver interface {
 	Resolve(ctx context.Context, did w3c.DID, opts *ResolverOpts) (IdentityState, error)
 	ResolveGist(ctx context.Context, opts *ResolverOpts) (*GistInfo, error)
 	BlockchainID() string
+	WalletAddress() (string, error)
+	TypedData(did w3c.DID, state string, gistRoot string, walletAddress string) (apitypes.TypedData, error)
 }
 
 type ResolverRegistry map[string]Resolver

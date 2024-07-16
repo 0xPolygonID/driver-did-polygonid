@@ -84,8 +84,6 @@ github.com/iden3/go-merkletree-sql/v2 v2.0.4 h1:Dp089P3YNX1BE8+T1tKQHWTtnk84Y/Kr
 github.com/iden3/go-merkletree-sql/v2 v2.0.4/go.mod h1:kRhHKYpui5DUsry5RpveP6IC4XMe6iApdV9VChRYuEk=
 github.com/iden3/go-schema-processor/v2 v2.4.2 h1:t9pMxSpyMDAU3xSpn2dTvnTUUAtPlwOcNavbgXEFiJk=
 github.com/iden3/go-schema-processor/v2 v2.4.2/go.mod h1:eBtILnPjh4wnsAg3LWnvcZlGG+5IkAJaRqhVBnDjerg=
-github.com/iden3/go-schema-processor/v2 v2.4.3-0.20240716072750-b7d560a31765 h1:UDdW0gP8GoOFVcIGrsAgDGAcLzI2IXSFMDQ2KYxd38k=
-github.com/iden3/go-schema-processor/v2 v2.4.3-0.20240716072750-b7d560a31765/go.mod h1:eBtILnPjh4wnsAg3LWnvcZlGG+5IkAJaRqhVBnDjerg=
 github.com/ipfs/go-cid v0.3.2 h1:OGgOd+JCFM+y1DjWPmVH+2/4POtpDzwcr7VgnB7mZXc=
 github.com/ipfs/go-cid v0.3.2/go.mod h1:gQ8pKqT/sUxGY+tIwy1RPpAojYu7jAyCp5Tz1svoupw=
 github.com/jackpal/go-nat-pmp v1.0.2 h1:KzKSgb7qkJvOUTqYl9/Hg/me3pWgBmERKrTGD7BdWus=
