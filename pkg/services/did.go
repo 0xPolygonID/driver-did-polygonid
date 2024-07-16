@@ -123,6 +123,7 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 				Published: &isPublished,
 				Info:      info,
 				Global:    gist,
+				Signature: identityState.Signature,
 			},
 		},
 	)

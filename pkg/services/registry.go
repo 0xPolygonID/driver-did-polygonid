@@ -21,6 +21,7 @@ var (
 type IdentityState struct {
 	StateInfo *StateInfo
 	GistInfo  *GistInfo
+	Signature string
 }
 
 type StateInfo struct {

@@ -2,13 +2,21 @@ package eth
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/subtle"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 	"github.com/iden3/contracts-abi/state/go/abi"
 	"github.com/iden3/driver-did-polygonid/pkg/services"
 	core "github.com/iden3/go-iden3-core/v2"
@@ -26,10 +34,16 @@ type StateContract interface {
 }
 
 type Resolver struct {
-	state StateContract
-
+	state           StateContract
 	contractAddress string
 	chainID         int
+	walletKey       string
+}
+
+type AuthData struct {
+	TypedData apitypes.TypedData
+	Signature string
+	Address   string
 }
 
 var (
@@ -38,8 +52,25 @@ var (
 	stateNotFoundException    = "execution reverted: State does not exist"
 )
 
+var apiTypes = apitypes.Types{
+	"IdentityState": []apitypes.Type{
+		{Name: "from", Type: "address"},
+		{Name: "state", Type: "uint256"},
+		{Name: "gistRoot", Type: "uint256"},
+		{Name: "identity", Type: "uint256"},
+	},
+	"EIP712Domain": []apitypes.Type{
+		{Name: "name", Type: "string"},
+		{Name: "chainId", Type: "uint256"},
+		{Name: "version", Type: "string"},
+		{Name: "salt", Type: "string"},
+	},
+}
+
+var primaryType = "IdentityState"
+
 // NewResolver create new ethereum resolver.
-func NewResolver(url, address string) (*Resolver, error) {
+func NewResolver(url, address, walletKey string) (*Resolver, error) {
 	c, err := ethclient.Dial(url)
 	if err != nil {
 		return nil, err
@@ -52,6 +83,7 @@ func NewResolver(url, address string) (*Resolver, error) {
 	resolver := &Resolver{
 		state:           sc,
 		contractAddress: address,
+		walletKey:       walletKey,
 	}
 	chainID, err := c.NetworkID(context.Background())
 	if err != nil {
@@ -125,8 +157,12 @@ func (r *Resolver) Resolve(
 		stateInfo, gistInfo, err = r.resolveLatest(ctx, userID)
 	}
 
+	stateInfoState := ""
+	gistInfoRoot := ""
+
 	identityState := services.IdentityState{}
 	if stateInfo != nil {
+		stateInfoState = stateInfo.State.String()
 		identityState.StateInfo = &services.StateInfo{
 			ID:                  did,
 			State:               stateInfo.State,
@@ -138,6 +174,7 @@ func (r *Resolver) Resolve(
 		}
 	}
 	if gistInfo != nil {
+		gistInfoRoot = gistInfo.Root.String()
 		identityState.GistInfo = &services.GistInfo{
 			Root:                gistInfo.Root,
 			ReplacedByRoot:      gistInfo.ReplacedByRoot,
@@ -148,7 +185,171 @@ func (r *Resolver) Resolve(
 		}
 	}
 
+	signature := ""
+	if r.walletKey != "" {
+		signature, err = r.signTypedData(userID.BigInt().String(), stateInfoState, gistInfoRoot)
+		if err != nil {
+			return services.IdentityState{}, err
+		}
+	}
+
+	identityState.Signature = signature
+
+	// verified, _ := r.VerifyIdentityState(identityState, did)
+	// log.Println("VERIFIED:", verified)
+
 	return identityState, err
+}
+
+func (r *Resolver) VerifyIdentityState(
+	identityState services.IdentityState,
+	did w3c.DID,
+) (bool, error) {
+	userID, err := core.IDFromDID(did)
+	if err != nil {
+		return false,
+			fmt.Errorf("invalid did format for did '%s': %v", identityState.StateInfo.ID, err)
+	}
+	privateKey, err := crypto.HexToECDSA(r.walletKey)
+	if err != nil {
+		return false, err
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return false, errors.New("error casting public key to ECDSA")
+	}
+
+	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	stateInfoState := ""
+	gistInfoRoot := ""
+	if identityState.StateInfo != nil {
+		stateInfoState = identityState.StateInfo.State.String()
+	}
+	if identityState.GistInfo != nil {
+		gistInfoRoot = identityState.GistInfo.Root.String()
+	}
+
+	typedData := r.getTypedData(userID.BigInt().String(), stateInfoState, gistInfoRoot, walletAddress.String())
+
+	authData := AuthData{TypedData: typedData, Signature: identityState.Signature, Address: walletAddress.String()}
+	return r.verifyTypedData(authData)
+}
+
+func (r *Resolver) getTypedData(identity string, state string, gistRoot string, walletAddress string) apitypes.TypedData {
+	salt := "resolver-123"
+
+	typedData := apitypes.TypedData{
+		Types:       apiTypes,
+		PrimaryType: primaryType,
+		Domain: apitypes.TypedDataDomain{
+			Name:    "StateInfo",
+			Version: "1",
+			Salt:    salt,
+			ChainId: math.NewHexOrDecimal256(int64(r.chainID)),
+		},
+		Message: apitypes.TypedDataMessage{
+			"from":     walletAddress,
+			"state":    state,
+			"gistRoot": gistRoot,
+			"identity": identity,
+		},
+	}
+
+	return typedData
+}
+
+func (r *Resolver) signTypedData(identity string, state string, gistRoot string) (string, error) {
+	privateKey, err := crypto.HexToECDSA(r.walletKey)
+	if err != nil {
+		return "", err
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return "", errors.New("error casting public key to ECDSA")
+	}
+
+	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	typedData := r.getTypedData(identity, state, gistRoot, walletAddress.String())
+
+	domainSeparator, err := typedData.HashStruct("EIP712Domain", typedData.Domain.Map())
+	if err != nil {
+		return "", err
+	}
+	typedDataHash, err := typedData.HashStruct(typedData.PrimaryType, typedData.Message)
+	if err != nil {
+		return "", err
+	}
+	rawData := []byte(fmt.Sprintf("\x19\x01%s%s", string(domainSeparator), string(typedDataHash)))
+	dataHash := crypto.Keccak256(rawData)
+
+	signature, err := crypto.Sign(dataHash, privateKey)
+	if err != nil {
+		return "", err
+	}
+
+	if signature[64] < 27 {
+		signature[64] += 27
+	}
+
+	return "0x" + hex.EncodeToString(signature), nil
+}
+
+func (r *Resolver) verifyTypedData(authData AuthData) (bool, error) {
+	signature, err := hexutil.Decode(authData.Signature)
+	if err != nil {
+		log.Println("Error %w", err)
+		return false, fmt.Errorf("decode signature: %w", err)
+	}
+
+	// EIP-712 typed data marshalling
+	domainSeparator, err := authData.TypedData.HashStruct("EIP712Domain", authData.TypedData.Domain.Map())
+	if err != nil {
+		return false, fmt.Errorf("eip712domain hash struct: %w", err)
+	}
+	typedDataHash, err := authData.TypedData.HashStruct(authData.TypedData.PrimaryType, authData.TypedData.Message)
+	if err != nil {
+		return false, fmt.Errorf("primary type hash struct: %w", err)
+	}
+
+	// add magic string prefix
+	rawData := []byte(fmt.Sprintf("\x19\x01%s%s", string(domainSeparator), string(typedDataHash)))
+	sighash := crypto.Keccak256(rawData)
+
+	// update the recovery id
+	// https://github.com/ethereum/go-ethereum/blob/55599ee95d4151a2502465e0afc7c47bd1acba77/internal/ethapi/api.go#L442
+	signature[64] -= 27
+
+	// get the pubkey used to sign this signature
+	sigPubkey, err := crypto.Ecrecover(sighash, signature)
+	if err != nil {
+		return false, fmt.Errorf("ecrecover: %w", err)
+	}
+
+	// get the address to confirm it's the same one in the auth token
+	pubkey, err := crypto.UnmarshalPubkey(sigPubkey)
+	if err != nil {
+		return false, fmt.Errorf("unmarshal pub key: %w", err)
+	}
+	address := crypto.PubkeyToAddress(*pubkey)
+
+	// verify the signature (not sure if this is actually required after ecrecover)
+	signatureNoRecoverID := signature[:len(signature)-1]
+	verified := crypto.VerifySignature(sigPubkey, sighash, signatureNoRecoverID)
+	if !verified {
+		return false, errors.New("verification failed")
+	}
+
+	dataAddress := common.HexToAddress(authData.Address)
+	if subtle.ConstantTimeCompare(address.Bytes(), dataAddress.Bytes()) == 0 {
+		return false, errors.New("address mismatch")
+	}
+
+	return true, nil
 }
 
 func (r *Resolver) resolveLatest(
