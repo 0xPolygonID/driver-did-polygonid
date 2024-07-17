@@ -60,10 +60,10 @@ var apiTypes = apitypes.Types{
 	},
 	"EIP712Domain": []apitypes.Type{
 		{Name: "name", Type: "string"},
-		{Name: "chainId", Type: "uint256"},
 		{Name: "version", Type: "string"},
-		{Name: "salt", Type: "string"},
+		{Name: "chainId", Type: "uint256"},
 		{Name: "verifyingContract", Type: "address"},
+		{Name: "salt", Type: "string"},
 	},
 }
 

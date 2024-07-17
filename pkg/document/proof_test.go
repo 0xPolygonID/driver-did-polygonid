@@ -21,10 +21,10 @@ func TestEthereumEip712SignatureProof2021_JSONUnmarshal(t *testing.T) {
 			"types": {
 				"EIP712Domain": [
 					{ "name": "name", "type": "string" },
-					{ "name": "chainId", "type": "uint256" },
 					{ "name": "version", "type": "string" },
-					{ "name": "salt", "type": "string" },
-					{ "name": "verifyingContract", "type": "address" }
+					{ "name": "chainId", "type": "uint256" },
+					{ "name": "verifyingContract", "type": "address" },
+					{ "name": "salt", "type": "string" }
 				],
 				"IdentityState": [
 					{ "name": "from", "type": "address" },
@@ -64,10 +64,10 @@ func TestEthereumEip712SignatureProof2021_JSONUnmarshal(t *testing.T) {
 		},
 		"EIP712Domain": []apitypes.Type{
 			{Name: "name", Type: "string"},
-			{Name: "chainId", Type: "uint256"},
 			{Name: "version", Type: "string"},
-			{Name: "salt", Type: "string"},
+			{Name: "chainId", Type: "uint256"},
 			{Name: "verifyingContract", Type: "address"},
+			{Name: "salt", Type: "string"},
 		},
 	}
 
