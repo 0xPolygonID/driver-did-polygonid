@@ -63,6 +63,7 @@ var apiTypes = apitypes.Types{
 		{Name: "chainId", Type: "uint256"},
 		{Name: "version", Type: "string"},
 		{Name: "salt", Type: "string"},
+		{Name: "verifyingContract", Type: "address"},
 	},
 }
 
@@ -263,16 +264,17 @@ func (r *Resolver) TypedData(did w3c.DID, state string, gistRoot string, walletA
 	}
 	identity := userID.BigInt().String()
 
-	salt := "resolver-123"
+	salt := "resolver-privado.id"
 
 	typedData := apitypes.TypedData{
 		Types:       apiTypes,
 		PrimaryType: primaryType,
 		Domain: apitypes.TypedDataDomain{
-			Name:    "StateInfo",
-			Version: "1",
-			Salt:    salt,
-			ChainId: math.NewHexOrDecimal256(int64(r.chainID)),
+			Name:              "StateInfo",
+			Version:           "1",
+			Salt:              salt,
+			ChainId:           math.NewHexOrDecimal256(int64(r.chainID)),
+			VerifyingContract: "0x0000000000000000000000000000000000000000",
 		},
 		Message: apitypes.TypedDataMessage{
 			"from":     walletAddress,

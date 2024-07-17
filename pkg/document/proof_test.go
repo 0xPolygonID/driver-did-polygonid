@@ -23,7 +23,8 @@ func TestEthereumEip712SignatureProof2021_JSONUnmarshal(t *testing.T) {
 					{ "name": "name", "type": "string" },
 					{ "name": "chainId", "type": "uint256" },
 					{ "name": "version", "type": "string" },
-					{ "name": "salt", "type": "string" }
+					{ "name": "salt", "type": "string" },
+					{ "name": "verifyingContract", "type": "address" }
 				],
 				"IdentityState": [
 					{ "name": "from", "type": "address" },
@@ -37,8 +38,8 @@ func TestEthereumEip712SignatureProof2021_JSONUnmarshal(t *testing.T) {
 				"name": "StateInfo",
 				"version": "1",
 				"chainId": "0x1",
-				"verifyingContract": "",
-				"salt": "resolver-123"
+				"verifyingContract": "0x0000000000000000000000000000000000000000",
+				"salt": "resolver-privado.id"
 			},
 			"message": {
 				"from": "0x5b18eF56aA61eeAE0E3434e3c3d8AEB19b141fe7",
@@ -66,11 +67,12 @@ func TestEthereumEip712SignatureProof2021_JSONUnmarshal(t *testing.T) {
 			{Name: "chainId", Type: "uint256"},
 			{Name: "version", Type: "string"},
 			{Name: "salt", Type: "string"},
+			{Name: "verifyingContract", Type: "address"},
 		},
 	}
 
 	var primaryType = "IdentityState"
-	salt := "resolver-123"
+	salt := "resolver-privado.id"
 	walletAddress := "0x5b18eF56aA61eeAE0E3434e3c3d8AEB19b141fe7"
 	state := "444"
 	gistRoot := "555"
@@ -87,10 +89,11 @@ func TestEthereumEip712SignatureProof2021_JSONUnmarshal(t *testing.T) {
 			Types:       apiTypes,
 			PrimaryType: primaryType,
 			Domain: apitypes.TypedDataDomain{
-				Name:    "StateInfo",
-				Version: "1",
-				Salt:    salt,
-				ChainId: math.NewHexOrDecimal256(int64(chainID)),
+				Name:              "StateInfo",
+				Version:           "1",
+				Salt:              salt,
+				ChainId:           math.NewHexOrDecimal256(int64(chainID)),
+				VerifyingContract: "0x0000000000000000000000000000000000000000",
 			},
 			Message: apitypes.TypedDataMessage{
 				"from":     walletAddress,

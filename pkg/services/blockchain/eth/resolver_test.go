@@ -240,7 +240,7 @@ func TestResolveSignature_Success(t *testing.T) {
 				GistInfo: &services.GistInfo{
 					Root: big.NewInt(555),
 				},
-				Signature: "0xae5dec0aaebed043dc78e9a2beef4dd355eaae7ed63958c725b4917e1246dffe0eae7f85438c1c500c891c59dff8b5ee55c1a52c09fcd42418a154ba32b00d431c",
+				Signature: "0xd0488105cd2af066b7aa7cb36091cd6a9328b8c365df0914e7392a721918c76d42b644ae364258072a5436706bdbd65d603fd657814d17dcabba3c7bd31c7a411b",
 			},
 		},
 		{
@@ -260,7 +260,7 @@ func TestResolveSignature_Success(t *testing.T) {
 					State: big.NewInt(555),
 				},
 				GistInfo:  nil,
-				Signature: "0xb84222149169ccbca64716c9bf932779feebadfdd1a2e3ecc8376af69352e9be4380a7aebe7c1442a94e2fc139ed4f193820454b9b4ad926e0da267b5e1968301c",
+				Signature: "0x0ee7c23eb141aa0d7e4a47469de211ec6d3ae01cb0850786112db15d5d7673164c2c9a3e1f3dc880cea4bf280e3bbeb52f4750f4d32152c20dcdefadc25212411c",
 			},
 		},
 		{
@@ -284,7 +284,7 @@ func TestResolveSignature_Success(t *testing.T) {
 				GistInfo: &services.GistInfo{
 					Root: big.NewInt(400),
 				},
-				Signature: "0x92df22c50364bbb1b18a03df7b651b2e5287eb05fc631f313195dca3d0255d5155407b15cb60622ba48d94fb134342dbcb1a34318a11e316de8a37a16dc9b7821b",
+				Signature: "0xdb4a1e6e5cb5dce2c9815cb612edc19e7bcd655f5e1c72370753c4d2df9ea11a698a970f99915847e1e0146ef7f36adb97088d9f7143f7293af72c05fd3e4d991b",
 			},
 		},
 	}
