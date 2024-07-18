@@ -55,7 +55,11 @@ var apiTypes = apitypes.Types{
 	"IdentityState": []apitypes.Type{
 		{Name: "from", Type: "address"},
 		{Name: "state", Type: "uint256"},
+		{Name: "stateCreatedAtTimestamp", Type: "uint256"},
+		{Name: "stateReplacedAtTimestamp", Type: "uint256"},
 		{Name: "gistRoot", Type: "uint256"},
+		{Name: "gistRootCreatedAtTimestamp", Type: "uint256"},
+		{Name: "gistRootReplacedAtTimestamp", Type: "uint256"},
 		{Name: "identity", Type: "uint256"},
 	},
 	"EIP712Domain": []apitypes.Type{
@@ -177,12 +181,8 @@ func (r *Resolver) Resolve(
 		stateInfo, gistInfo, err = r.resolveLatest(ctx, userID)
 	}
 
-	stateInfoState := ""
-	gistInfoRoot := ""
-
 	identityState := services.IdentityState{}
 	if stateInfo != nil {
-		stateInfoState = stateInfo.State.String()
 		identityState.StateInfo = &services.StateInfo{
 			ID:                  did,
 			State:               stateInfo.State,
@@ -194,7 +194,6 @@ func (r *Resolver) Resolve(
 		}
 	}
 	if gistInfo != nil {
-		gistInfoRoot = gistInfo.Root.String()
 		identityState.GistInfo = &services.GistInfo{
 			Root:                gistInfo.Root,
 			ReplacedByRoot:      gistInfo.ReplacedByRoot,
@@ -207,15 +206,18 @@ func (r *Resolver) Resolve(
 
 	signature := ""
 	if r.walletKey != "" {
-		verifyingContractChainId := 0
 		if opts.VerifyingContractChainId == nil {
 			return services.IdentityState{}, errors.New("error verifying contract chainId is not set")
 		}
-		verifyingContractChainId = *opts.VerifyingContractChainId
 		if opts.VerifyingContractAddress == "" {
 			return services.IdentityState{}, errors.New("error verifying contract address is not set")
 		}
-		signature, err = r.signTypedData(verifyingContractChainId, opts.VerifyingContractAddress, did, stateInfoState, gistInfoRoot)
+		verifyingContract := services.VerifyingContract{
+			ChainId: *opts.VerifyingContractChainId,
+			Address: opts.VerifyingContractAddress,
+		}
+
+		signature, err = r.signTypedData(verifyingContract, did, identityState)
 		if err != nil {
 			return services.IdentityState{}, err
 		}
@@ -232,8 +234,7 @@ func (r *Resolver) Resolve(
 func (r *Resolver) VerifyIdentityState(
 	identityState services.IdentityState,
 	did w3c.DID,
-	verifyingContractChainId int,
-	verifyingContractAddress string,
+	verifyingContract services.VerifyingContract,
 ) (bool, error) {
 	privateKey, err := crypto.HexToECDSA(r.walletKey)
 	if err != nil {
@@ -247,16 +248,8 @@ func (r *Resolver) VerifyIdentityState(
 	}
 
 	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	stateInfoState := ""
-	gistInfoRoot := ""
-	if identityState.StateInfo != nil {
-		stateInfoState = identityState.StateInfo.State.String()
-	}
-	if identityState.GistInfo != nil {
-		gistInfoRoot = identityState.GistInfo.Root.String()
-	}
 
-	typedData, err := r.TypedData(verifyingContractChainId, verifyingContractAddress, did, stateInfoState, gistInfoRoot, walletAddress.String())
+	typedData, err := r.TypedData(verifyingContract, did, identityState, walletAddress.String())
 	if err != nil {
 		return false, err
 	}
@@ -265,7 +258,7 @@ func (r *Resolver) VerifyIdentityState(
 	return r.verifyTypedData(authData)
 }
 
-func (r *Resolver) TypedData(verifyingContractChainId int, verifyingContractAddress string, did w3c.DID, state string, gistRoot string, walletAddress string) (apitypes.TypedData, error) {
+func (r *Resolver) TypedData(verifyingContract services.VerifyingContract, did w3c.DID, identityState services.IdentityState, walletAddress string) (apitypes.TypedData, error) {
 	userID, err := core.IDFromDID(did)
 	if err != nil {
 		return apitypes.TypedData{},
@@ -273,27 +266,49 @@ func (r *Resolver) TypedData(verifyingContractChainId int, verifyingContractAddr
 	}
 	identity := userID.BigInt().String()
 
+	stateInfoState := "0"
+	stateInfoCreatedAtTimestamp := "0"
+	stateInfoReplacedAtTimestamp := "0"
+
+	if identityState.StateInfo != nil {
+		stateInfoState = identityState.StateInfo.State.String()
+		stateInfoCreatedAtTimestamp = identityState.StateInfo.CreatedAtTimestamp.String()
+		stateInfoReplacedAtTimestamp = identityState.StateInfo.ReplacedAtTimestamp.String()
+	}
+	gistInfoRoot := "0"
+	gistInfoCreatedAtTimestamp := "0"
+	gistInfoReplacedAtTimestamp := "0"
+	if identityState.GistInfo != nil {
+		gistInfoRoot = identityState.GistInfo.Root.String()
+		gistInfoCreatedAtTimestamp = identityState.GistInfo.CreatedAtTimestamp.String()
+		gistInfoReplacedAtTimestamp = identityState.GistInfo.ReplacedAtTimestamp.String()
+	}
+
 	typedData := apitypes.TypedData{
 		Types:       apiTypes,
 		PrimaryType: primaryType,
 		Domain: apitypes.TypedDataDomain{
 			Name:              "StateInfo",
 			Version:           "1",
-			ChainId:           math.NewHexOrDecimal256(int64(verifyingContractChainId)),
-			VerifyingContract: verifyingContractAddress,
+			ChainId:           math.NewHexOrDecimal256(int64(verifyingContract.ChainId)),
+			VerifyingContract: verifyingContract.Address,
 		},
 		Message: apitypes.TypedDataMessage{
-			"from":     walletAddress,
-			"state":    state,
-			"gistRoot": gistRoot,
-			"identity": identity,
+			"from":                        walletAddress,
+			"state":                       stateInfoState,
+			"stateCreatedAtTimestamp":     stateInfoCreatedAtTimestamp,
+			"stateReplacedAtTimestamp":    stateInfoReplacedAtTimestamp,
+			"gistRoot":                    gistInfoRoot,
+			"gistRootCreatedAtTimestamp":  gistInfoCreatedAtTimestamp,
+			"gistRootReplacedAtTimestamp": gistInfoReplacedAtTimestamp,
+			"identity":                    identity,
 		},
 	}
 
 	return typedData, nil
 }
 
-func (r *Resolver) signTypedData(verifyingContractChainId int, verifyingContractAddress string, did w3c.DID, state string, gistRoot string) (string, error) {
+func (r *Resolver) signTypedData(verifyingContract services.VerifyingContract, did w3c.DID, identityState services.IdentityState) (string, error) {
 	privateKey, err := crypto.HexToECDSA(r.walletKey)
 	if err != nil {
 		return "", err
@@ -307,7 +322,7 @@ func (r *Resolver) signTypedData(verifyingContractChainId int, verifyingContract
 
 	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
-	typedData, err := r.TypedData(verifyingContractChainId, verifyingContractAddress, did, state, gistRoot, walletAddress.String())
+	typedData, err := r.TypedData(verifyingContract, did, identityState, walletAddress.String())
 	if err != nil {
 		return "", errors.New("error getting typed data for signing")
 	}

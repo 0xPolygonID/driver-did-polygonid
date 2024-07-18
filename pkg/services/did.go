@@ -133,24 +133,17 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 	walletAddress, err := resolver.WalletAddress()
 
 	if err == nil {
-		stateInfoState := ""
-		gistInfoRoot := ""
-		if identityState.StateInfo != nil {
-			stateInfoState = identityState.StateInfo.State.String()
-		}
-
-		if identityState.GistInfo != nil {
-			gistInfoRoot = identityState.GistInfo.Root.String()
-		}
-		verifyingContractChainId := 0
 		if opts.VerifyingContractChainId == nil {
 			return nil, errors.New("error verifying contract chainId is not set")
 		}
-		verifyingContractChainId = *opts.VerifyingContractChainId
 		if opts.VerifyingContractAddress == "" {
 			return nil, errors.New("error verifying contract address is not set")
 		}
-		eip712TypedData, err := resolver.TypedData(verifyingContractChainId, opts.VerifyingContractAddress, *userDID, stateInfoState, gistInfoRoot, walletAddress)
+		verifyingContract := VerifyingContract{
+			ChainId: *opts.VerifyingContractChainId,
+			Address: opts.VerifyingContractAddress,
+		}
+		eip712TypedData, err := resolver.TypedData(verifyingContract, *userDID, identityState, walletAddress)
 		if err != nil {
 			return nil, fmt.Errorf("invalid typed data: %v", err)
 		}

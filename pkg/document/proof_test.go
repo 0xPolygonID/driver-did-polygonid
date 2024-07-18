@@ -28,7 +28,11 @@ func TestEthereumEip712SignatureProof2021_JSONUnmarshal(t *testing.T) {
 				"IdentityState": [
 					{ "name": "from", "type": "address" },
 					{ "name": "state", "type": "uint256" },
+					{ "name": "stateCreatedAtTimestamp", "type": "uint256" },
+					{ "name": "stateReplacedAtTimestamp", "type": "uint256" },
 					{ "name": "gistRoot", "type": "uint256" },
+					{ "name": "gistRootCreatedAtTimestamp", "type": "uint256" },
+					{ "name": "gistRootReplacedAtTimestamp", "type": "uint256" },
 					{ "name": "identity", "type": "uint256" }
 				]
 			},
@@ -41,9 +45,13 @@ func TestEthereumEip712SignatureProof2021_JSONUnmarshal(t *testing.T) {
 			},
 			"message": {
 				"from": "0x5b18eF56aA61eeAE0E3434e3c3d8AEB19b141fe7",
-				"gistRoot": "555",
-				"identity": "19090607534999372304474213543962416547920895595808567155882840509226423042",
-				"state": "444"
+				"state": "444",
+				"stateCreatedAtTimestamp": "0",
+				"stateReplacedAtTimestamp": "0",
+				"gistRoot": "555",				
+				"gistRootCreatedAtTimestamp": "0",				
+				"gistRootReplacedAtTimestamp": "0",				
+				"identity": "19090607534999372304474213543962416547920895595808567155882840509226423042"
 			}
 		}
 	}`
@@ -57,7 +65,11 @@ func TestEthereumEip712SignatureProof2021_JSONUnmarshal(t *testing.T) {
 		"IdentityState": []apitypes.Type{
 			{Name: "from", Type: "address"},
 			{Name: "state", Type: "uint256"},
+			{Name: "stateCreatedAtTimestamp", Type: "uint256"},
+			{Name: "stateReplacedAtTimestamp", Type: "uint256"},
 			{Name: "gistRoot", Type: "uint256"},
+			{Name: "gistRootCreatedAtTimestamp", Type: "uint256"},
+			{Name: "gistRootReplacedAtTimestamp", Type: "uint256"},
 			{Name: "identity", Type: "uint256"},
 		},
 		"EIP712Domain": []apitypes.Type{
@@ -71,6 +83,10 @@ func TestEthereumEip712SignatureProof2021_JSONUnmarshal(t *testing.T) {
 	var primaryType = "IdentityState"
 	walletAddress := "0x5b18eF56aA61eeAE0E3434e3c3d8AEB19b141fe7"
 	state := "444"
+	stateCreatedAtTimestamp := "0"
+	stateReplacedAtTimestamp := "0"
+	gistRootCreatedAtTimestamp := "0"
+	gistRootReplacedAtTimestamp := "0"
 	gistRoot := "555"
 	identity := "19090607534999372304474213543962416547920895595808567155882840509226423042"
 	chainID := 1
@@ -91,10 +107,14 @@ func TestEthereumEip712SignatureProof2021_JSONUnmarshal(t *testing.T) {
 				VerifyingContract: "0x0000000000000000000000000000000000000000",
 			},
 			Message: apitypes.TypedDataMessage{
-				"from":     walletAddress,
-				"state":    state,
-				"gistRoot": gistRoot,
-				"identity": identity,
+				"from":                        walletAddress,
+				"state":                       state,
+				"stateCreatedAtTimestamp":     stateCreatedAtTimestamp,
+				"stateReplacedAtTimestamp":    stateReplacedAtTimestamp,
+				"gistRoot":                    gistRoot,
+				"gistRootCreatedAtTimestamp":  gistRootCreatedAtTimestamp,
+				"gistRootReplacedAtTimestamp": gistRootReplacedAtTimestamp,
+				"identity":                    identity,
 			},
 		},
 	}
