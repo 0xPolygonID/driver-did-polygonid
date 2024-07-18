@@ -26,8 +26,10 @@ type DidDocumentServices struct {
 }
 
 type ResolverOpts struct {
-	State    *big.Int
-	GistRoot *big.Int
+	State                    *big.Int
+	GistRoot                 *big.Int
+	VerifyingContractChainId *int
+	VerifyingContractAddress string
 }
 
 func NewDidDocumentServices(resolvers *ResolverRegistry, registry *ens.Registry) *DidDocumentServices {
@@ -140,8 +142,15 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 		if identityState.GistInfo != nil {
 			gistInfoRoot = identityState.GistInfo.Root.String()
 		}
-
-		eip712TypedData, err := resolver.TypedData(*userDID, stateInfoState, gistInfoRoot, walletAddress)
+		verifyingContractChainId := 0
+		if opts.VerifyingContractChainId == nil {
+			return nil, errors.New("error verifying contract chainId is not set")
+		}
+		verifyingContractChainId = *opts.VerifyingContractChainId
+		if opts.VerifyingContractAddress == "" {
+			return nil, errors.New("error verifying contract address is not set")
+		}
+		eip712TypedData, err := resolver.TypedData(verifyingContractChainId, opts.VerifyingContractAddress, *userDID, stateInfoState, gistInfoRoot, walletAddress)
 		if err != nil {
 			return nil, fmt.Errorf("invalid typed data: %v", err)
 		}

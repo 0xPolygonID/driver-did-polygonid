@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/iden3/driver-did-polygonid/pkg/services"
@@ -23,6 +25,8 @@ func (d *DidDocumentHandler) Get(w http.ResponseWriter, r *http.Request) {
 	opts, err := getResolverOpts(
 		r.URL.Query().Get("state"),
 		r.URL.Query().Get("gist"),
+		r.URL.Query().Get("verifyingContractChainId"),
+		r.URL.Query().Get("verifyingContractAddress"),
 	)
 	if err != nil {
 		log.Println("invalid options query:", err)
@@ -110,7 +114,7 @@ func (d *DidDocumentHandler) GetGist(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getResolverOpts(state, gistRoot string) (ro services.ResolverOpts, err error) {
+func getResolverOpts(state, gistRoot, verifyingContractChainId, verifyingContractAddress string) (ro services.ResolverOpts, err error) {
 	if state != "" && gistRoot != "" {
 		return ro, errors.New("'state' and 'gist root' cannot be used together")
 	}
@@ -127,6 +131,20 @@ func getResolverOpts(state, gistRoot string) (ro services.ResolverOpts, err erro
 			return ro, fmt.Errorf("invalid gist root format: %v", err)
 		}
 		ro.GistRoot = g.BigInt()
+	}
+	if verifyingContractChainId != "" {
+		i, err := strconv.Atoi(verifyingContractChainId)
+		if err != nil {
+			return ro, fmt.Errorf("invalid verifying contract chainId format: %v", err)
+		}
+		ro.VerifyingContractChainId = &i
+	}
+	if verifyingContractAddress != "" {
+		re := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
+		if !re.MatchString(verifyingContractAddress) {
+			return ro, fmt.Errorf("invalid verifying contract address format: %v", err)
+		}
+		ro.VerifyingContractAddress = verifyingContractAddress
 	}
 	return
 }

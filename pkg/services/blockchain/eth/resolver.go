@@ -63,7 +63,6 @@ var apiTypes = apitypes.Types{
 		{Name: "version", Type: "string"},
 		{Name: "chainId", Type: "uint256"},
 		{Name: "verifyingContract", Type: "address"},
-		{Name: "salt", Type: "string"},
 	},
 }
 
@@ -208,7 +207,15 @@ func (r *Resolver) Resolve(
 
 	signature := ""
 	if r.walletKey != "" {
-		signature, err = r.signTypedData(did, stateInfoState, gistInfoRoot)
+		verifyingContractChainId := 0
+		if opts.VerifyingContractChainId == nil {
+			return services.IdentityState{}, errors.New("error verifying contract chainId is not set")
+		}
+		verifyingContractChainId = *opts.VerifyingContractChainId
+		if opts.VerifyingContractAddress == "" {
+			return services.IdentityState{}, errors.New("error verifying contract address is not set")
+		}
+		signature, err = r.signTypedData(verifyingContractChainId, opts.VerifyingContractAddress, did, stateInfoState, gistInfoRoot)
 		if err != nil {
 			return services.IdentityState{}, err
 		}
@@ -225,6 +232,8 @@ func (r *Resolver) Resolve(
 func (r *Resolver) VerifyIdentityState(
 	identityState services.IdentityState,
 	did w3c.DID,
+	verifyingContractChainId int,
+	verifyingContractAddress string,
 ) (bool, error) {
 	privateKey, err := crypto.HexToECDSA(r.walletKey)
 	if err != nil {
@@ -247,7 +256,7 @@ func (r *Resolver) VerifyIdentityState(
 		gistInfoRoot = identityState.GistInfo.Root.String()
 	}
 
-	typedData, err := r.TypedData(did, stateInfoState, gistInfoRoot, walletAddress.String())
+	typedData, err := r.TypedData(verifyingContractChainId, verifyingContractAddress, did, stateInfoState, gistInfoRoot, walletAddress.String())
 	if err != nil {
 		return false, err
 	}
@@ -256,7 +265,7 @@ func (r *Resolver) VerifyIdentityState(
 	return r.verifyTypedData(authData)
 }
 
-func (r *Resolver) TypedData(did w3c.DID, state string, gistRoot string, walletAddress string) (apitypes.TypedData, error) {
+func (r *Resolver) TypedData(verifyingContractChainId int, verifyingContractAddress string, did w3c.DID, state string, gistRoot string, walletAddress string) (apitypes.TypedData, error) {
 	userID, err := core.IDFromDID(did)
 	if err != nil {
 		return apitypes.TypedData{},
@@ -264,17 +273,14 @@ func (r *Resolver) TypedData(did w3c.DID, state string, gistRoot string, walletA
 	}
 	identity := userID.BigInt().String()
 
-	salt := "resolver-privado.id"
-
 	typedData := apitypes.TypedData{
 		Types:       apiTypes,
 		PrimaryType: primaryType,
 		Domain: apitypes.TypedDataDomain{
 			Name:              "StateInfo",
 			Version:           "1",
-			Salt:              salt,
-			ChainId:           math.NewHexOrDecimal256(int64(r.chainID)),
-			VerifyingContract: "0x0000000000000000000000000000000000000000",
+			ChainId:           math.NewHexOrDecimal256(int64(verifyingContractChainId)),
+			VerifyingContract: verifyingContractAddress,
 		},
 		Message: apitypes.TypedDataMessage{
 			"from":     walletAddress,
@@ -287,7 +293,7 @@ func (r *Resolver) TypedData(did w3c.DID, state string, gistRoot string, walletA
 	return typedData, nil
 }
 
-func (r *Resolver) signTypedData(did w3c.DID, state string, gistRoot string) (string, error) {
+func (r *Resolver) signTypedData(verifyingContractChainId int, verifyingContractAddress string, did w3c.DID, state string, gistRoot string) (string, error) {
 	privateKey, err := crypto.HexToECDSA(r.walletKey)
 	if err != nil {
 		return "", err
@@ -301,15 +307,18 @@ func (r *Resolver) signTypedData(did w3c.DID, state string, gistRoot string) (st
 
 	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
-	typedData, err := r.TypedData(did, state, gistRoot, walletAddress.String())
+	typedData, err := r.TypedData(verifyingContractChainId, verifyingContractAddress, did, state, gistRoot, walletAddress.String())
+	if err != nil {
+		return "", errors.New("error getting typed data for signing")
+	}
 
 	domainSeparator, err := typedData.HashStruct("EIP712Domain", typedData.Domain.Map())
 	if err != nil {
-		return "", err
+		return "", errors.New("error hashing EIP712Domain for signing")
 	}
 	typedDataHash, err := typedData.HashStruct(typedData.PrimaryType, typedData.Message)
 	if err != nil {
-		return "", err
+		return "", errors.New("error hashing PrimaryType message for signing")
 	}
 	rawData := []byte(fmt.Sprintf("\x19\x01%s%s", string(domainSeparator), string(typedDataHash)))
 	dataHash := crypto.Keccak256(rawData)

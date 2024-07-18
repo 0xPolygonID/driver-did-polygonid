@@ -98,7 +98,7 @@ type Resolver interface {
 	ResolveGist(ctx context.Context, opts *ResolverOpts) (*GistInfo, error)
 	BlockchainID() string
 	WalletAddress() (string, error)
-	TypedData(did w3c.DID, state string, gistRoot string, walletAddress string) (apitypes.TypedData, error)
+	TypedData(verifyingContractChainId int, verifyingContractAddress string, did w3c.DID, state string, gistRoot string, walletAddress string) (apitypes.TypedData, error)
 }
 
 type ResolverRegistry map[string]Resolver

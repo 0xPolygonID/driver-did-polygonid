@@ -206,6 +206,8 @@ func TestNotFoundErr(t *testing.T) {
 }
 
 func TestResolveSignature_Success(t *testing.T) {
+	verifyingContractChainId := new(int)
+	*verifyingContractChainId = 1
 	tests := []struct {
 		name                  string
 		opts                  *services.ResolverOpts
@@ -216,7 +218,9 @@ func TestResolveSignature_Success(t *testing.T) {
 		{
 			name: "resolve identity state by gist",
 			opts: &services.ResolverOpts{
-				GistRoot: big.NewInt(1),
+				GistRoot:                 big.NewInt(1),
+				VerifyingContractChainId: verifyingContractChainId,
+				VerifyingContractAddress: "0x0000000000000000000000000000000000000000",
 			},
 			userDID: userDID,
 			contractMock: func(c *cm.MockStateContract) {
@@ -240,13 +244,15 @@ func TestResolveSignature_Success(t *testing.T) {
 				GistInfo: &services.GistInfo{
 					Root: big.NewInt(555),
 				},
-				Signature: "0xfd0b364ceb42b65824daa75c5f0c1932a9e3430e871e3810b8155244d7ac67772b02b8c24356180d5112035e84536bdf2de4ea7d0116967b3331fc95b50a2a961b",
+				Signature: "0x028ca69378ed198806eecebc722d1bfcf8fb5ca9232274f2403c2d6b4aa3199902555c672c474faec318de2d6974898d542f18f99f884000a22f29d0c2956d291c",
 			},
 		},
 		{
 			name: "resolve identity state by state",
 			opts: &services.ResolverOpts{
-				State: big.NewInt(1),
+				State:                    big.NewInt(1),
+				VerifyingContractChainId: verifyingContractChainId,
+				VerifyingContractAddress: "0x0000000000000000000000000000000000000000",
 			},
 			userDID: userDID,
 			contractMock: func(c *cm.MockStateContract) {
@@ -260,12 +266,15 @@ func TestResolveSignature_Success(t *testing.T) {
 					State: big.NewInt(555),
 				},
 				GistInfo:  nil,
-				Signature: "0x0ec2b122b0f53aed76a006f9d9dde7e0ce0b67371d70983379e8f0ee99c8fae74fdc58687259221f7f7ac5ad4bf1654be189084507cd7f309565af1dc82322861c",
+				Signature: "0xb23932bd8f5fc4674583b41ceade5aeb6113ea22b3f330e4deaaa432dfed9ab853dac55f531abd90a8c89b573444aeb974305c3a8aac3bc201531aad34383fbb1c",
 			},
 		},
 		{
-			name:    "resolve latest state",
-			opts:    &services.ResolverOpts{},
+			name: "resolve latest state",
+			opts: &services.ResolverOpts{
+				VerifyingContractChainId: verifyingContractChainId,
+				VerifyingContractAddress: "0x0000000000000000000000000000000000000000",
+			},
 			userDID: userDID,
 			contractMock: func(c *cm.MockStateContract) {
 				userID, _ := core.IDFromDID(*userDID)
@@ -284,7 +293,7 @@ func TestResolveSignature_Success(t *testing.T) {
 				GistInfo: &services.GistInfo{
 					Root: big.NewInt(400),
 				},
-				Signature: "0x5e44cee08048ec667ba6480f1c969ae68a41d8704fd4a778fb8bc16868def4ef0622774d88e3ec898b5e2f51ac46b621da5ae060c205778f19895c6f038b90331c",
+				Signature: "0x5a9ea69f9311ac800a3fc2375cf6fa4d4646b5b2b55219f934755177c93d367a152e4ab7585600598f280485c41471a782dc6ef3e1fd235bd48e4441446ec24d1b",
 			},
 		},
 	}
@@ -305,7 +314,7 @@ func TestResolveSignature_Success(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tt.expectedIdentityState, identityState)
 
-			ok, _ := resolver.VerifyIdentityState(identityState, *tt.userDID)
+			ok, _ := resolver.VerifyIdentityState(identityState, *tt.userDID, *tt.opts.VerifyingContractChainId, tt.opts.VerifyingContractAddress)
 			require.Equal(t, true, ok)
 			ctrl.Finish()
 		})
