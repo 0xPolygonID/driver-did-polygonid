@@ -166,19 +166,31 @@ func (r *Resolver) Resolve(
 		err       error
 	)
 
-	userID, err := core.IDFromDID(did)
-	if err != nil {
-		return services.IdentityState{},
-			fmt.Errorf("invalid did format for did '%s': %v", did, err)
-	}
+	if did.IDStrings[2] == "000000000000000000000000000000000000000000" {
+		if opts.GistRoot == nil {
+			return services.IdentityState{},
+				errors.New("options GistRoot is required for root only did")
+		}
+		stateInfo, gistInfo, err = r.resolveGistRootOnly(ctx, opts.GistRoot)
+	} else {
+		userID, err := core.IDFromDID(did)
+		if err != nil {
+			return services.IdentityState{},
+				fmt.Errorf("invalid did format for did '%s': %v", did, err)
+		}
 
-	switch {
-	case opts.GistRoot != nil:
-		stateInfo, gistInfo, err = r.resolveStateByGistRoot(ctx, userID, opts.GistRoot)
-	case opts.State != nil:
-		stateInfo, err = r.resolveState(ctx, userID, opts.State)
-	default:
-		stateInfo, gistInfo, err = r.resolveLatest(ctx, userID)
+		switch {
+		case opts.GistRoot != nil:
+			stateInfo, gistInfo, err = r.resolveStateByGistRoot(ctx, userID, opts.GistRoot)
+		case opts.State != nil:
+			stateInfo, err = r.resolveState(ctx, userID, opts.State)
+		default:
+			stateInfo, gistInfo, err = r.resolveLatest(ctx, userID)
+		}
+
+		if err != nil && err.Error() != "identity not found" {
+			return services.IdentityState{}, err
+		}
 	}
 
 	identityState := services.IdentityState{}
@@ -259,13 +271,15 @@ func (r *Resolver) VerifyIdentityState(
 }
 
 func (r *Resolver) TypedData(verifyingContract services.VerifyingContract, did w3c.DID, identityState services.IdentityState, walletAddress string) (apitypes.TypedData, error) {
-	userID, err := core.IDFromDID(did)
-	if err != nil {
-		return apitypes.TypedData{},
-			fmt.Errorf("invalid did format for did '%s': %v", did, err)
+	identity := "0"
+	if did.IDStrings[2] != "000000000000000000000000000000000000000000" {
+		userID, err := core.IDFromDID(did)
+		if err != nil {
+			return apitypes.TypedData{},
+				fmt.Errorf("invalid did format for did '%s': %v", did, err)
+		}
+		identity = userID.BigInt().String()
 	}
-	identity := userID.BigInt().String()
-
 	stateInfoState := "0"
 	stateInfoCreatedAtTimestamp := "0"
 	stateInfoReplacedAtTimestamp := "0"
@@ -466,6 +480,18 @@ func (r *Resolver) resolveStateByGistRoot(
 	}
 
 	return &stateInfo, &gistInfo, verifyContractState(id, stateInfo)
+}
+
+func (r *Resolver) resolveGistRootOnly(
+	ctx context.Context,
+	gistRoot *big.Int,
+) (*abi.IStateStateInfo, *abi.IStateGistRootInfo, error) {
+	gistInfo, err := r.state.GetGISTRootInfo(&bind.CallOpts{Context: ctx}, gistRoot)
+	if err = notFoundErr(err); err != nil {
+		return nil, nil, err
+	}
+
+	return nil, &gistInfo, nil
 }
 
 func verifyContractState(id core.ID, state abi.IStateStateInfo) error {

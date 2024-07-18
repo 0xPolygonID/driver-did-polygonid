@@ -208,6 +208,8 @@ func TestNotFoundErr(t *testing.T) {
 func TestResolveSignature_Success(t *testing.T) {
 	verifyingContractChainId := new(int)
 	*verifyingContractChainId = 1
+	userEmptyDID, _ := w3c.ParseDID("did:polygonid:polygon:amoy:000000000000000000000000000000000000000000")
+
 	tests := []struct {
 		name                  string
 		opts                  *services.ResolverOpts
@@ -304,6 +306,29 @@ func TestResolveSignature_Success(t *testing.T) {
 					ReplacedAtTimestamp: big.NewInt(0),
 				},
 				Signature: "0xee0ba8b277b71b4b3e79c668d5e3de169e5e72f92b3bb4e8637e570ca6c810bd5684d01b9a9b7fbbead7528040715b77d9a8177aa3de72a589851cd252dd6a111b",
+			},
+		},
+		{
+			name: "resolve only gist",
+			opts: &services.ResolverOpts{
+				GistRoot:                 big.NewInt(400),
+				VerifyingContractChainId: verifyingContractChainId,
+				VerifyingContractAddress: "0x0000000000000000000000000000000000000000",
+			},
+			userDID: userEmptyDID,
+			contractMock: func(c *cm.MockStateContract) {
+				latestGist := big.NewInt(400)
+				latestGistInfo := abi.IStateGistRootInfo{Root: big.NewInt(400), CreatedAtTimestamp: big.NewInt(0), ReplacedAtTimestamp: big.NewInt(0)}
+				c.EXPECT().GetGISTRootInfo(gomock.Any(), latestGist).Return(latestGistInfo, nil)
+			},
+			expectedIdentityState: services.IdentityState{
+				StateInfo: nil,
+				GistInfo: &services.GistInfo{
+					Root:                big.NewInt(400),
+					CreatedAtTimestamp:  big.NewInt(0),
+					ReplacedAtTimestamp: big.NewInt(0),
+				},
+				Signature: "0x20cbaf4cd93fbe19aafe4fb0c76eaa1828fb1d7918f2afdebd9fe0db8269c81d291ea72edecce1c038ce89f0ba13bb717779739b885b0d11d15a8045f701f3071b",
 			},
 		},
 	}

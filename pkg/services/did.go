@@ -48,25 +48,35 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 		return errResolution, err
 	}
 
-	userID, err := core.IDFromDID(*userDID)
-	errResolution, err = expectedError(err)
-	if err != nil {
-		return errResolution, err
+	blockchain := ""
+	network := ""
+	userID := core.ID{}
+	if userDID.IDStrings[2] == "000000000000000000000000000000000000000000" {
+		blockchain = userDID.IDStrings[0]
+		network = userDID.IDStrings[1]
+	} else {
+		userID, err := core.IDFromDID(*userDID)
+		errResolution, err = expectedError(err)
+		if err != nil {
+			return errResolution, err
+		}
+
+		b, err := core.BlockchainFromID(userID)
+		errResolution, err = expectedError(err)
+		if err != nil {
+			return errResolution, err
+		}
+
+		n, err := core.NetworkIDFromID(userID)
+		errResolution, err = expectedError(err)
+		if err != nil {
+			return errResolution, err
+		}
+		blockchain = string(b)
+		network = string(n)
 	}
 
-	b, err := core.BlockchainFromID(userID)
-	errResolution, err = expectedError(err)
-	if err != nil {
-		return errResolution, err
-	}
-
-	n, err := core.NetworkIDFromID(userID)
-	errResolution, err = expectedError(err)
-	if err != nil {
-		return errResolution, err
-	}
-
-	resolver, err := d.resolvers.GetResolverByNetwork(string(b), string(n))
+	resolver, err := d.resolvers.GetResolverByNetwork(blockchain, network)
 	errResolution, err = expectedError(err)
 	if err != nil {
 		return errResolution, err
