@@ -142,13 +142,7 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 
 	walletAddress, err := resolver.WalletAddress()
 
-	if err == nil {
-		if opts.VerifyingContractChainId == nil {
-			return nil, errors.New("error verifying contract chainId is not set")
-		}
-		if opts.VerifyingContractAddress == "" {
-			return nil, errors.New("error verifying contract address is not set")
-		}
+	if err == nil && opts.VerifyingContractChainId != nil && opts.VerifyingContractAddress != "" {
 		verifyingContract := VerifyingContract{
 			ChainId: *opts.VerifyingContractChainId,
 			Address: opts.VerifyingContractAddress,
