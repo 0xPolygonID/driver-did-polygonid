@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -54,6 +56,7 @@ var (
 var apiTypes = apitypes.Types{
 	"IdentityState": []apitypes.Type{
 		{Name: "from", Type: "address"},
+		{Name: "timestamp", Type: "uint256"},
 		{Name: "state", Type: "uint256"},
 		{Name: "stateCreatedAtTimestamp", Type: "uint256"},
 		{Name: "stateReplacedAtTimestamp", Type: "uint256"},
@@ -71,6 +74,8 @@ var apiTypes = apitypes.Types{
 }
 
 var primaryType = "IdentityState"
+
+var TimeStamp = TimeStampFn
 
 // NewResolver create new ethereum resolver.
 func NewResolver(url, address, walletKey string) (*Resolver, error) {
@@ -261,6 +266,11 @@ func (r *Resolver) VerifyIdentityState(
 	return r.verifyTypedData(authData)
 }
 
+func TimeStampFn() string {
+	timestamp := strconv.FormatInt(time.Now().UTC().Unix(), 10)
+	return timestamp
+}
+
 func (r *Resolver) TypedData(verifyingContract services.VerifyingContract, did w3c.DID, identityState services.IdentityState, walletAddress string) (apitypes.TypedData, error) {
 	identity := "0"
 	if did.IDStrings[2] != "000000000000000000000000000000000000000000" {
@@ -289,6 +299,7 @@ func (r *Resolver) TypedData(verifyingContract services.VerifyingContract, did w
 		gistInfoReplacedAtTimestamp = identityState.GistInfo.ReplacedAtTimestamp.String()
 	}
 
+	timestamp := TimeStamp()
 	typedData := apitypes.TypedData{
 		Types:       apiTypes,
 		PrimaryType: primaryType,
@@ -300,6 +311,7 @@ func (r *Resolver) TypedData(verifyingContract services.VerifyingContract, did w
 		},
 		Message: apitypes.TypedDataMessage{
 			"from":                        walletAddress,
+			"timestamp":                   timestamp,
 			"state":                       stateInfoState,
 			"stateCreatedAtTimestamp":     stateInfoCreatedAtTimestamp,
 			"stateReplacedAtTimestamp":    stateInfoReplacedAtTimestamp,

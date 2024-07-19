@@ -215,6 +215,7 @@ func TestResolveSignature_Success(t *testing.T) {
 		opts                  *services.ResolverOpts
 		userDID               *w3c.DID
 		contractMock          func(c *cm.MockStateContract)
+		timeStamp             func() string
 		expectedIdentityState services.IdentityState
 	}{
 		{
@@ -238,6 +239,9 @@ func TestResolveSignature_Success(t *testing.T) {
 				stateInfo := abi.IStateStateInfo{Id: userID.BigInt(), State: big.NewInt(444), CreatedAtTimestamp: big.NewInt(0), ReplacedAtTimestamp: big.NewInt(0)}
 				c.EXPECT().GetStateInfoByIdAndState(gomock.Any(), gomock.Any(), big.NewInt(5)).Return(stateInfo, nil)
 			},
+			timeStamp: func() string {
+				return "0"
+			},
 			expectedIdentityState: services.IdentityState{
 				StateInfo: &services.StateInfo{
 					ID:                  *userDID,
@@ -250,7 +254,7 @@ func TestResolveSignature_Success(t *testing.T) {
 					CreatedAtTimestamp:  big.NewInt(0),
 					ReplacedAtTimestamp: big.NewInt(0),
 				},
-				Signature: "0x840efe43812a09ea67648fa3fca8d148dab883ceed81eb484e79561f05522a0012bdff6a3119b23a99e128481f6ffde1ce8960b3d7968d34a513539112071ec61c",
+				Signature: "0xb35a80bf24a76c1f0b1d2026af586c5a424d456eaa496031be8ea36724f0b4121dea6259ebb126f4473698980311bda48678f220da4149975636d00c5b3a716b1b",
 			},
 		},
 		{
@@ -266,6 +270,9 @@ func TestResolveSignature_Success(t *testing.T) {
 				res := abi.IStateStateInfo{Id: userID.BigInt(), State: big.NewInt(555), CreatedAtTimestamp: big.NewInt(0), ReplacedAtTimestamp: big.NewInt(0)}
 				c.EXPECT().GetStateInfoByIdAndState(gomock.Any(), gomock.Any(), big.NewInt(1)).Return(res, nil)
 			},
+			timeStamp: func() string {
+				return "0"
+			},
 			expectedIdentityState: services.IdentityState{
 				StateInfo: &services.StateInfo{
 					ID:                  *userDID,
@@ -274,7 +281,7 @@ func TestResolveSignature_Success(t *testing.T) {
 					ReplacedAtTimestamp: big.NewInt(0),
 				},
 				GistInfo:  nil,
-				Signature: "0x5f411887c018ed7438f3887167b23464e8807078d163185e043f7b3117a3b59106a5fae670451c17f43cdc9842c5abccc3210d3b7e7a4627c8ab840c0e480d711c",
+				Signature: "0x29c02ac82784594f9eca4194502ce3514414b02ac359277991f4af6cfcef1965497b07d288a841bd8a5f45bd8859e8259a6c19f722fe66707f1ebb160a82bcbe1b",
 			},
 		},
 		{
@@ -293,6 +300,9 @@ func TestResolveSignature_Success(t *testing.T) {
 				stateInfo := abi.IStateStateInfo{Id: userID.BigInt(), State: big.NewInt(555), CreatedAtTimestamp: big.NewInt(0), ReplacedAtTimestamp: big.NewInt(0)}
 				c.EXPECT().GetStateInfoById(gomock.Any(), userID.BigInt()).Return(stateInfo, nil)
 			},
+			timeStamp: func() string {
+				return "0"
+			},
 			expectedIdentityState: services.IdentityState{
 				StateInfo: &services.StateInfo{
 					ID:                  *userDID,
@@ -305,7 +315,7 @@ func TestResolveSignature_Success(t *testing.T) {
 					CreatedAtTimestamp:  big.NewInt(0),
 					ReplacedAtTimestamp: big.NewInt(0),
 				},
-				Signature: "0xee0ba8b277b71b4b3e79c668d5e3de169e5e72f92b3bb4e8637e570ca6c810bd5684d01b9a9b7fbbead7528040715b77d9a8177aa3de72a589851cd252dd6a111b",
+				Signature: "0x01645122b7895740b445a8b2a149f853948af73f6ecec4061322ceaa5df45ce451ea151e8aec2c30bc30ef9175788fcd3e451d3faad483c071f81950b5984fda1c",
 			},
 		},
 		{
@@ -321,6 +331,9 @@ func TestResolveSignature_Success(t *testing.T) {
 				latestGistInfo := abi.IStateGistRootInfo{Root: big.NewInt(400), CreatedAtTimestamp: big.NewInt(0), ReplacedAtTimestamp: big.NewInt(0)}
 				c.EXPECT().GetGISTRootInfo(gomock.Any(), latestGist).Return(latestGistInfo, nil)
 			},
+			timeStamp: func() string {
+				return "0"
+			},
 			expectedIdentityState: services.IdentityState{
 				StateInfo: nil,
 				GistInfo: &services.GistInfo{
@@ -328,7 +341,7 @@ func TestResolveSignature_Success(t *testing.T) {
 					CreatedAtTimestamp:  big.NewInt(0),
 					ReplacedAtTimestamp: big.NewInt(0),
 				},
-				Signature: "0x20cbaf4cd93fbe19aafe4fb0c76eaa1828fb1d7918f2afdebd9fe0db8269c81d291ea72edecce1c038ce89f0ba13bb717779739b885b0d11d15a8045f701f3071b",
+				Signature: "0xe3c17d6d39f96bc16738ce69897e5770abde25bb44e6b987b1279034820135f377350456a314ba39bb9c6292cc06d74d19cf577b0a31bf82de454ea30be1615b1b",
 			},
 		},
 	}
@@ -344,11 +357,11 @@ func TestResolveSignature_Success(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			stateContract := cm.NewMockStateContract(ctrl)
 			tt.contractMock(stateContract)
+			TimeStamp = tt.timeStamp
 			resolver := Resolver{state: stateContract, chainID: 1, walletKey: privateKeyHex}
 			identityState, err := resolver.Resolve(context.Background(), *tt.userDID, tt.opts)
 			require.NoError(t, err)
 			require.Equal(t, tt.expectedIdentityState, identityState)
-
 			verifyingContract := services.VerifyingContract{
 				ChainId: *tt.opts.VerifyingContractChainId,
 				Address: tt.opts.VerifyingContractAddress,
