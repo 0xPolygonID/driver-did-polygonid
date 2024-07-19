@@ -55,7 +55,7 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 		blockchain = userDID.IDStrings[0]
 		network = userDID.IDStrings[1]
 	} else {
-		userID, err := core.IDFromDID(*userDID)
+		userID, err = core.IDFromDID(*userDID)
 		errResolution, err = expectedError(err)
 		if err != nil {
 			return errResolution, err
@@ -110,7 +110,7 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 
 	chainIDStateAddress := resolver.BlockchainID()
 
-	if err == nil {
+	if err == nil && userDID.IDStrings[2] != "000000000000000000000000000000000000000000" {
 		addressString := fmt.Sprintf("%x", addr)
 		blockchainAccountID := fmt.Sprintf("eip155:%s:0x%s", strings.Split(chainIDStateAddress, ":")[0], addressString)
 		didResolution.DidDocument.VerificationMethod = append(

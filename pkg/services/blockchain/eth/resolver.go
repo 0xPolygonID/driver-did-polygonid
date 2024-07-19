@@ -217,13 +217,7 @@ func (r *Resolver) Resolve(
 	}
 
 	signature := ""
-	if r.walletKey != "" {
-		if opts.VerifyingContractChainId == nil {
-			return services.IdentityState{}, errors.New("error verifying contract chainId is not set")
-		}
-		if opts.VerifyingContractAddress == "" {
-			return services.IdentityState{}, errors.New("error verifying contract address is not set")
-		}
+	if r.walletKey != "" && opts.VerifyingContractChainId != nil && opts.VerifyingContractAddress != "" {
 		verifyingContract := services.VerifyingContract{
 			ChainId: *opts.VerifyingContractChainId,
 			Address: opts.VerifyingContractAddress,
@@ -236,9 +230,6 @@ func (r *Resolver) Resolve(
 	}
 
 	identityState.Signature = signature
-
-	// verified, _ := r.VerifyIdentityState(identityState, did)
-	// log.Println("VERIFIED:", verified)
 
 	return identityState, err
 }
