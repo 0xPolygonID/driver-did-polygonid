@@ -222,13 +222,8 @@ func (r *Resolver) Resolve(
 	}
 
 	signature := ""
-	if r.walletKey != "" && opts.VerifyingContractChainId != nil && opts.VerifyingContractAddress != "" {
-		verifyingContract := services.VerifyingContract{
-			ChainId: *opts.VerifyingContractChainId,
-			Address: opts.VerifyingContractAddress,
-		}
-
-		signature, err = r.signTypedData(verifyingContract, did, identityState)
+	if r.walletKey != "" && opts.Signature != "" {
+		signature, err = r.signTypedData(did, identityState)
 		if err != nil {
 			return services.IdentityState{}, err
 		}
@@ -242,7 +237,6 @@ func (r *Resolver) Resolve(
 func (r *Resolver) VerifyIdentityState(
 	identityState services.IdentityState,
 	did w3c.DID,
-	verifyingContract services.VerifyingContract,
 ) (bool, error) {
 	privateKey, err := crypto.HexToECDSA(r.walletKey)
 	if err != nil {
@@ -257,7 +251,7 @@ func (r *Resolver) VerifyIdentityState(
 
 	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
-	typedData, err := r.TypedData(verifyingContract, did, identityState, walletAddress.String())
+	typedData, err := r.TypedData(did, identityState, walletAddress.String())
 	if err != nil {
 		return false, err
 	}
@@ -271,7 +265,7 @@ func TimeStampFn() string {
 	return timestamp
 }
 
-func (r *Resolver) TypedData(verifyingContract services.VerifyingContract, did w3c.DID, identityState services.IdentityState, walletAddress string) (apitypes.TypedData, error) {
+func (r *Resolver) TypedData(did w3c.DID, identityState services.IdentityState, walletAddress string) (apitypes.TypedData, error) {
 	identity := "0"
 	if did.IDStrings[2] != "000000000000000000000000000000000000000000" {
 		userID, err := core.IDFromDID(did)
@@ -306,8 +300,8 @@ func (r *Resolver) TypedData(verifyingContract services.VerifyingContract, did w
 		Domain: apitypes.TypedDataDomain{
 			Name:              "StateInfo",
 			Version:           "1",
-			ChainId:           math.NewHexOrDecimal256(int64(verifyingContract.ChainId)),
-			VerifyingContract: verifyingContract.Address,
+			ChainId:           math.NewHexOrDecimal256(int64(0)),
+			VerifyingContract: "0x0000000000000000000000000000000000000000",
 		},
 		Message: apitypes.TypedDataMessage{
 			"from":                        walletAddress,
@@ -325,7 +319,7 @@ func (r *Resolver) TypedData(verifyingContract services.VerifyingContract, did w
 	return typedData, nil
 }
 
-func (r *Resolver) signTypedData(verifyingContract services.VerifyingContract, did w3c.DID, identityState services.IdentityState) (string, error) {
+func (r *Resolver) signTypedData(did w3c.DID, identityState services.IdentityState) (string, error) {
 	privateKey, err := crypto.HexToECDSA(r.walletKey)
 	if err != nil {
 		return "", err
@@ -339,7 +333,7 @@ func (r *Resolver) signTypedData(verifyingContract services.VerifyingContract, d
 
 	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
-	typedData, err := r.TypedData(verifyingContract, did, identityState, walletAddress.String())
+	typedData, err := r.TypedData(did, identityState, walletAddress.String())
 	if err != nil {
 		return "", errors.New("error getting typed data for signing")
 	}

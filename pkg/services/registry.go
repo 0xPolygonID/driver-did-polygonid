@@ -35,11 +35,6 @@ type StateInfo struct {
 	ReplacedAtBlock     *big.Int
 }
 
-type VerifyingContract struct {
-	ChainId int
-	Address string
-}
-
 func (si *StateInfo) ToDidRepresentation() (*verifiable.StateInfo, error) {
 	if si == nil {
 		return nil, nil
@@ -103,7 +98,7 @@ type Resolver interface {
 	ResolveGist(ctx context.Context, opts *ResolverOpts) (*GistInfo, error)
 	BlockchainID() string
 	WalletAddress() (string, error)
-	TypedData(verifyingContract VerifyingContract, did w3c.DID, identityState IdentityState, walletAddress string) (apitypes.TypedData, error)
+	TypedData(did w3c.DID, identityState IdentityState, walletAddress string) (apitypes.TypedData, error)
 }
 
 type ResolverRegistry map[string]Resolver

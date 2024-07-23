@@ -206,8 +206,6 @@ func TestNotFoundErr(t *testing.T) {
 }
 
 func TestResolveSignature_Success(t *testing.T) {
-	verifyingContractChainId := new(int)
-	*verifyingContractChainId = 1
 	userEmptyDID, _ := w3c.ParseDID("did:polygonid:polygon:amoy:000000000000000000000000000000000000000000")
 
 	tests := []struct {
@@ -221,9 +219,8 @@ func TestResolveSignature_Success(t *testing.T) {
 		{
 			name: "resolve identity state by gist",
 			opts: &services.ResolverOpts{
-				GistRoot:                 big.NewInt(1),
-				VerifyingContractChainId: verifyingContractChainId,
-				VerifyingContractAddress: "0x0000000000000000000000000000000000000000",
+				GistRoot:  big.NewInt(1),
+				Signature: "EthereumEip712Signature2021",
 			},
 			userDID: userDID,
 			contractMock: func(c *cm.MockStateContract) {
@@ -254,15 +251,14 @@ func TestResolveSignature_Success(t *testing.T) {
 					CreatedAtTimestamp:  big.NewInt(0),
 					ReplacedAtTimestamp: big.NewInt(0),
 				},
-				Signature: "0xb35a80bf24a76c1f0b1d2026af586c5a424d456eaa496031be8ea36724f0b4121dea6259ebb126f4473698980311bda48678f220da4149975636d00c5b3a716b1b",
+				Signature: "0xe63151912749d0cae7fea6a13dda6d54061626cc03a79dac46b6a11b3259c6c335d8266f09eaf070a31c8a23765fb01e3c8bf927f5ab25346f743ae309eabc801c",
 			},
 		},
 		{
 			name: "resolve identity state by state",
 			opts: &services.ResolverOpts{
-				State:                    big.NewInt(1),
-				VerifyingContractChainId: verifyingContractChainId,
-				VerifyingContractAddress: "0x0000000000000000000000000000000000000000",
+				State:     big.NewInt(1),
+				Signature: "EthereumEip712Signature2021",
 			},
 			userDID: userDID,
 			contractMock: func(c *cm.MockStateContract) {
@@ -281,14 +277,13 @@ func TestResolveSignature_Success(t *testing.T) {
 					ReplacedAtTimestamp: big.NewInt(0),
 				},
 				GistInfo:  nil,
-				Signature: "0x29c02ac82784594f9eca4194502ce3514414b02ac359277991f4af6cfcef1965497b07d288a841bd8a5f45bd8859e8259a6c19f722fe66707f1ebb160a82bcbe1b",
+				Signature: "0x3dce5819f16b5225bbe9ec3ce144b45654119f4cfdff2f9e8f5d33a0fc3790de570dfacdc304ee217b43952c9393425fc45f5abc9e9f7e5b63196479319eb62c1b",
 			},
 		},
 		{
 			name: "resolve latest state",
 			opts: &services.ResolverOpts{
-				VerifyingContractChainId: verifyingContractChainId,
-				VerifyingContractAddress: "0x0000000000000000000000000000000000000000",
+				Signature: "EthereumEip712Signature2021",
 			},
 			userDID: userDID,
 			contractMock: func(c *cm.MockStateContract) {
@@ -315,15 +310,14 @@ func TestResolveSignature_Success(t *testing.T) {
 					CreatedAtTimestamp:  big.NewInt(0),
 					ReplacedAtTimestamp: big.NewInt(0),
 				},
-				Signature: "0x01645122b7895740b445a8b2a149f853948af73f6ecec4061322ceaa5df45ce451ea151e8aec2c30bc30ef9175788fcd3e451d3faad483c071f81950b5984fda1c",
+				Signature: "0x866206f5be01973be72631fd9931d8ccc7d6e8612f799dc39ff495d1e3a975af7c81c0e4fc13e50f4177fbc637e81ca546ee2906eccf1dfa96687fff05bd49831c",
 			},
 		},
 		{
 			name: "resolve only gist",
 			opts: &services.ResolverOpts{
-				GistRoot:                 big.NewInt(400),
-				VerifyingContractChainId: verifyingContractChainId,
-				VerifyingContractAddress: "0x0000000000000000000000000000000000000000",
+				GistRoot:  big.NewInt(400),
+				Signature: "EthereumEip712Signature2021",
 			},
 			userDID: userEmptyDID,
 			contractMock: func(c *cm.MockStateContract) {
@@ -341,7 +335,7 @@ func TestResolveSignature_Success(t *testing.T) {
 					CreatedAtTimestamp:  big.NewInt(0),
 					ReplacedAtTimestamp: big.NewInt(0),
 				},
-				Signature: "0xe3c17d6d39f96bc16738ce69897e5770abde25bb44e6b987b1279034820135f377350456a314ba39bb9c6292cc06d74d19cf577b0a31bf82de454ea30be1615b1b",
+				Signature: "0xec3a8bd564247bed3c16f719d499e02d4914a8fa10704a8f3dcae75ca393b3ae47c3f147355f5476cb495b8e0463fd128da2795c02bd9420f8071d93652d13b81b",
 			},
 		},
 	}
@@ -362,12 +356,8 @@ func TestResolveSignature_Success(t *testing.T) {
 			identityState, err := resolver.Resolve(context.Background(), *tt.userDID, tt.opts)
 			require.NoError(t, err)
 			require.Equal(t, tt.expectedIdentityState, identityState)
-			verifyingContract := services.VerifyingContract{
-				ChainId: *tt.opts.VerifyingContractChainId,
-				Address: tt.opts.VerifyingContractAddress,
-			}
 
-			ok, _ := resolver.VerifyIdentityState(identityState, *tt.userDID, verifyingContract)
+			ok, _ := resolver.VerifyIdentityState(identityState, *tt.userDID)
 			require.Equal(t, true, ok)
 			ctrl.Finish()
 		})
