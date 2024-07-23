@@ -176,7 +176,8 @@ func (r *Resolver) Resolve(
 			return services.IdentityState{},
 				errors.New("options GistRoot is required for root only did")
 		}
-		stateInfo, gistInfo, err = r.resolveGistRootOnly(ctx, opts.GistRoot)
+		stateInfo = nil
+		gistInfo, err = r.resolveGistRootOnly(ctx, opts.GistRoot)
 	} else {
 		userID, err := core.IDFromDID(did)
 		if err != nil {
@@ -367,7 +368,7 @@ func (r *Resolver) verifyTypedData(authData AuthData) (bool, error) {
 		return false, fmt.Errorf("decode signature: %w", err)
 	}
 
-	// EIP-712 typed data marshalling
+	// EIP-712 typed data marshaling
 	domainSeparator, err := authData.TypedData.HashStruct("EIP712Domain", authData.TypedData.Domain.Map())
 	if err != nil {
 		return false, fmt.Errorf("eip712domain hash struct: %w", err)
@@ -482,13 +483,13 @@ func (r *Resolver) resolveStateByGistRoot(
 func (r *Resolver) resolveGistRootOnly(
 	ctx context.Context,
 	gistRoot *big.Int,
-) (*abi.IStateStateInfo, *abi.IStateGistRootInfo, error) {
+) (*abi.IStateGistRootInfo, error) {
 	gistInfo, err := r.state.GetGISTRootInfo(&bind.CallOpts{Context: ctx}, gistRoot)
 	if err = notFoundErr(err); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return nil, &gistInfo, nil
+	return &gistInfo, nil
 }
 
 func verifyContractState(id core.ID, state abi.IStateStateInfo) error {

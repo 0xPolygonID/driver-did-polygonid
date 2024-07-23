@@ -97,7 +97,7 @@ func (d *DidDocumentHandler) GetGist(w http.ResponseWriter, r *http.Request) {
 	gistInfo, err := d.DidDocumentService.GetGist(r.Context(), chain, networkid, nil)
 	if errors.Is(err, services.ErrNetworkIsNotSupported) {
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, `{"error":"resolver for '%s:%s' network not found"}`, chain, networkid)
+		log.Printf(`{"error":"resolver for '%s:%s' network not found"}`, chain, networkid)
 		return
 	} else if err != nil {
 		log.Printf("failed get info about latest gist from network '%s:%s': %v\n", chain, networkid, err)
