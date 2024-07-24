@@ -84,6 +84,7 @@ type DidResolutionMetadata struct {
 	Message     string              `json:"message,omitempty"`
 	ContentType string              `json:"contentType,omitempty"`
 	Retrieved   time.Time           `json:"retrieved,omitempty"`
+	Type        string              `json:"type,omitempty"`
 	Proof       DidResolutionProofs `json:"proof,omitempty"`
 }
 

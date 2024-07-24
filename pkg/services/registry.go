@@ -19,6 +19,13 @@ var (
 	ErrNotFound = errors.New("not found")
 )
 
+type PrimaryType int32
+
+const (
+	IDENTITY_STATE_TYPE PrimaryType = 0
+	GLOBAL_STATE_TYPE   PrimaryType = 1
+)
+
 type IdentityState struct {
 	StateInfo *StateInfo
 	GistInfo  *GistInfo
@@ -98,7 +105,7 @@ type Resolver interface {
 	ResolveGist(ctx context.Context, opts *ResolverOpts) (*GistInfo, error)
 	BlockchainID() string
 	WalletAddress() (string, error)
-	TypedData(did w3c.DID, identityState IdentityState, walletAddress string) (apitypes.TypedData, error)
+	TypedData(primaryType PrimaryType, did w3c.DID, identityState IdentityState, walletAddress string) (apitypes.TypedData, error)
 }
 
 type ResolverRegistry map[string]Resolver

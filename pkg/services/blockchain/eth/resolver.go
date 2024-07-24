@@ -53,19 +53,15 @@ var (
 	stateNotFoundException    = "execution reverted: State does not exist"
 )
 
-var apiTypes = apitypes.Types{
+var IdentityStateApiTypes = apitypes.Types{
 	"IdentityState": []apitypes.Type{
 		{Name: "from", Type: "address"},
 		{Name: "timestamp", Type: "uint256"},
-		{Name: "state", Type: "uint256"},
-		{Name: "stateCreatedAtTimestamp", Type: "uint256"},
-		{Name: "stateReplacedByState", Type: "uint256"},
-		{Name: "stateReplacedAtTimestamp", Type: "uint256"},
-		{Name: "gistRoot", Type: "uint256"},
-		{Name: "gistRootCreatedAtTimestamp", Type: "uint256"},
-		{Name: "gistRootReplacedByRoot", Type: "uint256"},
-		{Name: "gistRootReplacedAtTimestamp", Type: "uint256"},
 		{Name: "identity", Type: "uint256"},
+		{Name: "state", Type: "uint256"},
+		{Name: "replacedByState", Type: "uint256"},
+		{Name: "createdAtTimestamp", Type: "uint256"},
+		{Name: "replacedAtTimestamp", Type: "uint256"},
 	},
 	"EIP712Domain": []apitypes.Type{
 		{Name: "name", Type: "string"},
@@ -75,7 +71,22 @@ var apiTypes = apitypes.Types{
 	},
 }
 
-var primaryType = "IdentityState"
+var GlobalStateApiTypes = apitypes.Types{
+	"GlobalState": []apitypes.Type{
+		{Name: "from", Type: "address"},
+		{Name: "timestamp", Type: "uint256"},
+		{Name: "root", Type: "uint256"},
+		{Name: "replacedByRoot", Type: "uint256"},
+		{Name: "createdAtTimestamp", Type: "uint256"},
+		{Name: "replacedAtTimestamp", Type: "uint256"},
+	},
+	"EIP712Domain": []apitypes.Type{
+		{Name: "name", Type: "string"},
+		{Name: "version", Type: "string"},
+		{Name: "chainId", Type: "uint256"},
+		{Name: "verifyingContract", Type: "address"},
+	},
+}
 
 var TimeStamp = TimeStampFn
 
@@ -226,7 +237,11 @@ func (r *Resolver) Resolve(
 
 	signature := ""
 	if r.walletKey != "" && opts.Signature != "" {
-		signature, err = r.signTypedData(did, identityState)
+		primaryType := services.IDENTITY_STATE_TYPE
+		if stateInfo == nil {
+			primaryType = services.GLOBAL_STATE_TYPE
+		}
+		signature, err = r.signTypedData(primaryType, did, identityState)
 		if err != nil {
 			return services.IdentityState{}, err
 		}
@@ -237,7 +252,8 @@ func (r *Resolver) Resolve(
 	return identityState, err
 }
 
-func (r *Resolver) VerifyIdentityState(
+func (r *Resolver) VerifyState(
+	primaryType services.PrimaryType,
 	identityState services.IdentityState,
 	did w3c.DID,
 ) (bool, error) {
@@ -254,7 +270,7 @@ func (r *Resolver) VerifyIdentityState(
 
 	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
-	typedData, err := r.TypedData(did, identityState, walletAddress.String())
+	typedData, err := r.TypedData(primaryType, did, identityState, walletAddress.String())
 	if err != nil {
 		return false, err
 	}
@@ -268,7 +284,7 @@ func TimeStampFn() string {
 	return timestamp
 }
 
-func (r *Resolver) TypedData(did w3c.DID, identityState services.IdentityState, walletAddress string) (apitypes.TypedData, error) {
+func (r *Resolver) TypedData(primaryType services.PrimaryType, did w3c.DID, identityState services.IdentityState, walletAddress string) (apitypes.TypedData, error) {
 	identity := "0"
 	if did.IDStrings[2] != "000000000000000000000000000000000000000000" {
 		userID, err := core.IDFromDID(did)
@@ -278,57 +294,74 @@ func (r *Resolver) TypedData(did w3c.DID, identityState services.IdentityState, 
 		}
 		identity = userID.BigInt().String()
 	}
-	stateInfoState := "0"
-	stateInfoCreatedAtTimestamp := "0"
-	stateInfoReplacedByState := "0"
-	stateInfoReplacedAtTimestamp := "0"
-	gistInfoRoot := "0"
-	gistInfoCreatedAtTimestamp := "0"
-	gistInfoReplacedByRoot := "0"
-	gistInfoReplacedAtTimestamp := "0"
+
+	root := "0"
+	state := "0"
+	createdAtTimestamp := "0"
+	replacedByRoot := "0"
+	replacedByState := "0"
+	replacedAtTimestamp := "0"
 
 	if identityState.StateInfo != nil {
-		stateInfoState = identityState.StateInfo.State.String()
-		stateInfoCreatedAtTimestamp = identityState.StateInfo.CreatedAtTimestamp.String()
-		stateInfoReplacedByState = identityState.StateInfo.ReplacedByState.String()
-		stateInfoReplacedAtTimestamp = identityState.StateInfo.ReplacedAtTimestamp.String()
+		state = identityState.StateInfo.State.String()
+		replacedByState = identityState.StateInfo.ReplacedByState.String()
+		createdAtTimestamp = identityState.StateInfo.CreatedAtTimestamp.String()
+		replacedAtTimestamp = identityState.StateInfo.ReplacedAtTimestamp.String()
 	}
 	if identityState.GistInfo != nil {
-		gistInfoRoot = identityState.GistInfo.Root.String()
-		gistInfoCreatedAtTimestamp = identityState.GistInfo.CreatedAtTimestamp.String()
-		gistInfoReplacedByRoot = identityState.GistInfo.ReplacedByRoot.String()
-		gistInfoReplacedAtTimestamp = identityState.GistInfo.ReplacedAtTimestamp.String()
+		root = identityState.GistInfo.Root.String()
+		replacedByRoot = identityState.GistInfo.ReplacedByRoot.String()
+		createdAtTimestamp = identityState.GistInfo.CreatedAtTimestamp.String()
+		replacedAtTimestamp = identityState.GistInfo.ReplacedAtTimestamp.String()
 	}
 
+	apiTypes := apitypes.Types{}
+	message := apitypes.TypedDataMessage{}
+	primaryTypeString := ""
 	timestamp := TimeStamp()
+
+	switch primaryType {
+	case services.IDENTITY_STATE_TYPE:
+		primaryTypeString = "IdentityState"
+		apiTypes = IdentityStateApiTypes
+		message = apitypes.TypedDataMessage{
+			"from":                walletAddress,
+			"timestamp":           timestamp,
+			"identity":            identity,
+			"state":               state,
+			"replacedByState":     replacedByState,
+			"createdAtTimestamp":  createdAtTimestamp,
+			"replacedAtTimestamp": replacedAtTimestamp,
+		}
+	case services.GLOBAL_STATE_TYPE:
+		primaryTypeString = "GlobalState"
+		apiTypes = GlobalStateApiTypes
+		message = apitypes.TypedDataMessage{
+			"from":                walletAddress,
+			"timestamp":           timestamp,
+			"root":                root,
+			"replacedByRoot":      replacedByRoot,
+			"createdAtTimestamp":  createdAtTimestamp,
+			"replacedAtTimestamp": replacedAtTimestamp,
+		}
+	}
+
 	typedData := apitypes.TypedData{
 		Types:       apiTypes,
-		PrimaryType: primaryType,
+		PrimaryType: primaryTypeString,
 		Domain: apitypes.TypedDataDomain{
 			Name:              "StateInfo",
 			Version:           "1",
 			ChainId:           math.NewHexOrDecimal256(int64(0)),
 			VerifyingContract: "0x0000000000000000000000000000000000000000",
 		},
-		Message: apitypes.TypedDataMessage{
-			"from":                        walletAddress,
-			"timestamp":                   timestamp,
-			"state":                       stateInfoState,
-			"stateCreatedAtTimestamp":     stateInfoCreatedAtTimestamp,
-			"stateReplacedByState":        stateInfoReplacedByState,
-			"stateReplacedAtTimestamp":    stateInfoReplacedAtTimestamp,
-			"gistRoot":                    gistInfoRoot,
-			"gistRootCreatedAtTimestamp":  gistInfoCreatedAtTimestamp,
-			"gistRootReplacedByRoot":      gistInfoReplacedByRoot,
-			"gistRootReplacedAtTimestamp": gistInfoReplacedAtTimestamp,
-			"identity":                    identity,
-		},
+		Message: message,
 	}
 
 	return typedData, nil
 }
 
-func (r *Resolver) signTypedData(did w3c.DID, identityState services.IdentityState) (string, error) {
+func (r *Resolver) signTypedData(primaryType services.PrimaryType, did w3c.DID, identityState services.IdentityState) (string, error) {
 	privateKey, err := crypto.HexToECDSA(r.walletKey)
 	if err != nil {
 		return "", err
@@ -342,7 +375,7 @@ func (r *Resolver) signTypedData(did w3c.DID, identityState services.IdentitySta
 
 	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
-	typedData, err := r.TypedData(did, identityState, walletAddress.String())
+	typedData, err := r.TypedData(primaryType, did, identityState, walletAddress.String())
 	if err != nil {
 		return "", errors.New("error getting typed data for signing")
 	}

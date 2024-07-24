@@ -142,7 +142,11 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 	walletAddress, err := resolver.WalletAddress()
 
 	if err == nil && opts.Signature != "" {
-		eip712TypedData, err := resolver.TypedData(*userDID, identityState, walletAddress)
+		primaryType := IDENTITY_STATE_TYPE
+		if userDID.IDStrings[2] == "000000000000000000000000000000000000000000" {
+			primaryType = GLOBAL_STATE_TYPE
+		}
+		eip712TypedData, err := resolver.TypedData(primaryType, *userDID, identityState, walletAddress)
 		if err != nil {
 			return nil, fmt.Errorf("invalid typed data: %v", err)
 		}
@@ -151,7 +155,7 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 			Type:               document.EthereumEip712SignatureProof2021Type,
 			ProofPursopose:     "assertionMethod",
 			ProofValue:         identityState.Signature,
-			VerificationMethod: fmt.Sprintf("did:pkh:eip155:%s:%s#blockchainAccountId", strings.Split(chainIDStateAddress, ":")[0], walletAddress),
+			VerificationMethod: fmt.Sprintf("did:pkh:eip155:0:%s#blockchainAccountId", walletAddress),
 			Eip712:             eip712TypedData,
 			Created:            time.Now(),
 		}

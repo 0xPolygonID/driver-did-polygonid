@@ -253,7 +253,7 @@ func TestResolveSignature_Success(t *testing.T) {
 					ReplacedByRoot:      big.NewInt(0),
 					ReplacedAtTimestamp: big.NewInt(0),
 				},
-				Signature: "0xedbe6cd15241ee8cd6a76446fbdf44e90df28c42eaff606ea6cd55d97158c036187aad5556753bd7a306cd71bdaddfac7af7f4127b66e4159d3d6d69548ba4de1c",
+				Signature: "0x6276946bac246584ed6eaa2d5e43be5147e67cc7aa3b969c82bb9b1670e8de8b7f7410286f25d6bee4330b4bc260286cf8505358ffa29c8e677e4f05d78acf131c",
 			},
 		},
 		{
@@ -280,7 +280,7 @@ func TestResolveSignature_Success(t *testing.T) {
 					ReplacedAtTimestamp: big.NewInt(0),
 				},
 				GistInfo:  nil,
-				Signature: "0x3fe7236be270e37125e265ced2b5be614909015d9636c7bca14e9adca38a9b5e789cedaa32edec24b9c1226df1ed4d86dafa8ab1587fb6d29b07e040dfb1b2861c",
+				Signature: "0xdd07cd99ee8aa853c3e942aa5d57bfb844cae3db35fe29e8fc635ff4b2f5377d4b3c65f270474e6c5931b3d77f536233bc56d63172da8dba188f1f6fa51a10cb1c",
 			},
 		},
 		{
@@ -315,7 +315,7 @@ func TestResolveSignature_Success(t *testing.T) {
 					ReplacedByRoot:      big.NewInt(0),
 					ReplacedAtTimestamp: big.NewInt(0),
 				},
-				Signature: "0x8a39cf242b4474f62ad3579c31ae42e5981c0237fe6232513528f2731defc3db553535f23895a7d444d31a7643924071ce34f8a3dd308bfcbf1d4a90eb6ee5571c",
+				Signature: "0xdd07cd99ee8aa853c3e942aa5d57bfb844cae3db35fe29e8fc635ff4b2f5377d4b3c65f270474e6c5931b3d77f536233bc56d63172da8dba188f1f6fa51a10cb1c",
 			},
 		},
 		{
@@ -341,7 +341,7 @@ func TestResolveSignature_Success(t *testing.T) {
 					ReplacedByRoot:      big.NewInt(0),
 					ReplacedAtTimestamp: big.NewInt(0),
 				},
-				Signature: "0xb38e057dddbb4636ecf7a8f9d1eefc352ee0c8e395857462859509d9e40c68bf731e285117f571f5805bcbc6fb13a16fadd83d963d8a3918a793cf8877a363481b",
+				Signature: "0xe64e080d08b948e5303b49288f1ff599df5b21fd20d7a944026a17e69f860e21662538ec1f8cba2f4a76e7c25d0f5cf506dc16bbc3148158ed81dd899528c69f1c",
 			},
 		},
 	}
@@ -363,7 +363,12 @@ func TestResolveSignature_Success(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tt.expectedIdentityState, identityState)
 
-			ok, _ := resolver.VerifyIdentityState(identityState, *tt.userDID)
+			primaryType := services.IDENTITY_STATE_TYPE
+			if tt.expectedIdentityState.StateInfo == nil {
+				primaryType = services.GLOBAL_STATE_TYPE
+			}
+
+			ok, _ := resolver.VerifyState(primaryType, identityState, *tt.userDID)
 			require.Equal(t, true, ok)
 			ctrl.Finish()
 		})
