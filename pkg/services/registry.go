@@ -22,8 +22,8 @@ var (
 type PrimaryType int32
 
 const (
-	IDENTITY_STATE_TYPE PrimaryType = 0
-	GLOBAL_STATE_TYPE   PrimaryType = 1
+	IdentityStateType PrimaryType = 0
+	GlobalStateType   PrimaryType = 1
 )
 
 type IdentityState struct {

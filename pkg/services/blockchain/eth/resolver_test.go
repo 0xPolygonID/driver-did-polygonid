@@ -363,9 +363,9 @@ func TestResolveSignature_Success(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tt.expectedIdentityState, identityState)
 
-			primaryType := services.IDENTITY_STATE_TYPE
+			primaryType := services.IdentityStateType
 			if tt.expectedIdentityState.StateInfo == nil {
-				primaryType = services.GLOBAL_STATE_TYPE
+				primaryType = services.GlobalStateType
 			}
 
 			ok, _ := resolver.VerifyState(primaryType, identityState, *tt.userDID)

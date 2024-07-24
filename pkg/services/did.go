@@ -142,9 +142,9 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 	walletAddress, err := resolver.WalletAddress()
 
 	if err == nil && opts.Signature != "" {
-		primaryType := IDENTITY_STATE_TYPE
+		primaryType := IdentityStateType
 		if userDID.IDStrings[2] == "000000000000000000000000000000000000000000" {
-			primaryType = GLOBAL_STATE_TYPE
+			primaryType = GlobalStateType
 		}
 		eip712TypedData, err := resolver.TypedData(primaryType, *userDID, identityState, walletAddress)
 		if err != nil {

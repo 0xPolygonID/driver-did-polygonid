@@ -53,7 +53,7 @@ var (
 	stateNotFoundException    = "execution reverted: State does not exist"
 )
 
-var IdentityStateApiTypes = apitypes.Types{
+var IdentityStateAPITypes = apitypes.Types{
 	"IdentityState": []apitypes.Type{
 		{Name: "from", Type: "address"},
 		{Name: "timestamp", Type: "uint256"},
@@ -71,7 +71,7 @@ var IdentityStateApiTypes = apitypes.Types{
 	},
 }
 
-var GlobalStateApiTypes = apitypes.Types{
+var GlobalStateAPITypes = apitypes.Types{
 	"GlobalState": []apitypes.Type{
 		{Name: "from", Type: "address"},
 		{Name: "timestamp", Type: "uint256"},
@@ -237,9 +237,9 @@ func (r *Resolver) Resolve(
 
 	signature := ""
 	if r.walletKey != "" && opts.Signature != "" {
-		primaryType := services.IDENTITY_STATE_TYPE
+		primaryType := services.IdentityStateType
 		if stateInfo == nil {
-			primaryType = services.GLOBAL_STATE_TYPE
+			primaryType = services.GlobalStateType
 		}
 		signature, err = r.signTypedData(primaryType, did, identityState)
 		if err != nil {
@@ -321,9 +321,9 @@ func (r *Resolver) TypedData(primaryType services.PrimaryType, did w3c.DID, iden
 	timestamp := TimeStamp()
 
 	switch primaryType {
-	case services.IDENTITY_STATE_TYPE:
+	case services.IdentityStateType:
 		primaryTypeString = "IdentityState"
-		apiTypes = IdentityStateApiTypes
+		apiTypes = IdentityStateAPITypes
 		message = apitypes.TypedDataMessage{
 			"from":                walletAddress,
 			"timestamp":           timestamp,
@@ -333,9 +333,9 @@ func (r *Resolver) TypedData(primaryType services.PrimaryType, did w3c.DID, iden
 			"createdAtTimestamp":  createdAtTimestamp,
 			"replacedAtTimestamp": replacedAtTimestamp,
 		}
-	case services.GLOBAL_STATE_TYPE:
+	case services.GlobalStateType:
 		primaryTypeString = "GlobalState"
-		apiTypes = GlobalStateApiTypes
+		apiTypes = GlobalStateAPITypes
 		message = apitypes.TypedDataMessage{
 			"from":                walletAddress,
 			"timestamp":           timestamp,
