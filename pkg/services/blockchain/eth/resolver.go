@@ -59,9 +59,11 @@ var apiTypes = apitypes.Types{
 		{Name: "timestamp", Type: "uint256"},
 		{Name: "state", Type: "uint256"},
 		{Name: "stateCreatedAtTimestamp", Type: "uint256"},
+		{Name: "stateReplacedByState", Type: "uint256"},
 		{Name: "stateReplacedAtTimestamp", Type: "uint256"},
 		{Name: "gistRoot", Type: "uint256"},
 		{Name: "gistRootCreatedAtTimestamp", Type: "uint256"},
+		{Name: "gistRootReplacedByRoot", Type: "uint256"},
 		{Name: "gistRootReplacedAtTimestamp", Type: "uint256"},
 		{Name: "identity", Type: "uint256"},
 	},
@@ -278,19 +280,23 @@ func (r *Resolver) TypedData(did w3c.DID, identityState services.IdentityState, 
 	}
 	stateInfoState := "0"
 	stateInfoCreatedAtTimestamp := "0"
+	stateInfoReplacedByState := "0"
 	stateInfoReplacedAtTimestamp := "0"
+	gistInfoRoot := "0"
+	gistInfoCreatedAtTimestamp := "0"
+	gistInfoReplacedByRoot := "0"
+	gistInfoReplacedAtTimestamp := "0"
 
 	if identityState.StateInfo != nil {
 		stateInfoState = identityState.StateInfo.State.String()
 		stateInfoCreatedAtTimestamp = identityState.StateInfo.CreatedAtTimestamp.String()
+		stateInfoReplacedByState = identityState.StateInfo.ReplacedByState.String()
 		stateInfoReplacedAtTimestamp = identityState.StateInfo.ReplacedAtTimestamp.String()
 	}
-	gistInfoRoot := "0"
-	gistInfoCreatedAtTimestamp := "0"
-	gistInfoReplacedAtTimestamp := "0"
 	if identityState.GistInfo != nil {
 		gistInfoRoot = identityState.GistInfo.Root.String()
 		gistInfoCreatedAtTimestamp = identityState.GistInfo.CreatedAtTimestamp.String()
+		gistInfoReplacedByRoot = identityState.GistInfo.ReplacedByRoot.String()
 		gistInfoReplacedAtTimestamp = identityState.GistInfo.ReplacedAtTimestamp.String()
 	}
 
@@ -309,9 +315,11 @@ func (r *Resolver) TypedData(did w3c.DID, identityState services.IdentityState, 
 			"timestamp":                   timestamp,
 			"state":                       stateInfoState,
 			"stateCreatedAtTimestamp":     stateInfoCreatedAtTimestamp,
+			"stateReplacedByState":        stateInfoReplacedByState,
 			"stateReplacedAtTimestamp":    stateInfoReplacedAtTimestamp,
 			"gistRoot":                    gistInfoRoot,
 			"gistRootCreatedAtTimestamp":  gistInfoCreatedAtTimestamp,
+			"gistRootReplacedByRoot":      gistInfoReplacedByRoot,
 			"gistRootReplacedAtTimestamp": gistInfoReplacedAtTimestamp,
 			"identity":                    identity,
 		},
