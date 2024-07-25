@@ -15,14 +15,17 @@ const (
 	ErrUnknownNetwork     ErrorCode = "unknownNetwork"
 
 	StateType                            = "Iden3StateInfo2023"
+	Iden3ResolutionMetadataType          = "Iden3ResolutionMetadata"
 	EcdsaSecp256k1RecoveryMethod2020Type = "EcdsaSecp256k1RecoveryMethod2020"
 )
 
 const (
-	defaultContext       = "https://w3id.org/did-resolution/v1"
-	defaultDidDocContext = "https://www.w3.org/ns/did/v1"
-	iden3Context         = "https://schema.iden3.io/core/jsonld/auth.jsonld"
-	defaultContentType   = "application/did+ld+json"
+	defaultContext         = "https://w3id.org/did-resolution/v1"
+	defaultDidDocContext   = "https://www.w3.org/ns/did/v1"
+	iden3Context           = "https://schema.iden3.io/core/jsonld/auth.jsonld"
+	defaultContentType     = "application/did+ld+json"
+	iden3ResolutionContext = "https://schema.iden3.io/core/jsonld/resolution.jsonld"
+	eip712sigContext       = "https://w3id.org/security/suites/eip712sig-2021/v1"
 )
 
 // DidResolution representation of did resolution.
@@ -49,6 +52,10 @@ func NewDidResolution() *DidResolution {
 		},
 		DidDocumentMetadata: &DidDocumentMetadata{},
 	}
+}
+
+func DidResolutionMetadataSigContext() []string {
+	return []string{iden3ResolutionContext, eip712sigContext}
 }
 
 func NewDidMethodNotSupportedResolution(msg string) *DidResolution {
@@ -80,6 +87,7 @@ func NewDidErrorResolution(errCode ErrorCode, errMsg string) *DidResolution {
 
 // DidResolutionMetadata representation of resolution metadata.
 type DidResolutionMetadata struct {
+	Context     interface{}         `json:"@context,omitempty"`
 	Error       ErrorCode           `json:"error,omitempty"`
 	Message     string              `json:"message,omitempty"`
 	ContentType string              `json:"contentType,omitempty"`

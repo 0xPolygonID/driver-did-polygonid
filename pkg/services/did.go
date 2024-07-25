@@ -160,6 +160,8 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 			Created:            time.Now(),
 		}
 
+		didResolution.DidResolutionMetadata.Context = document.DidResolutionMetadataSigContext()
+		didResolution.DidResolutionMetadata.Type = document.Iden3ResolutionMetadataType
 		didResolution.DidResolutionMetadata.Proof = append(didResolution.DidResolutionMetadata.Proof, eip712Proof)
 	}
 
