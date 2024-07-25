@@ -47,6 +47,8 @@ func NewDidResolution() *DidResolution {
 			VerificationMethod: []verifiable.CommonVerificationMethod{},
 		},
 		DidResolutionMetadata: &DidResolutionMetadata{
+			Context:     []string{iden3ResolutionContext},
+			Type:        Iden3ResolutionMetadataType,
 			ContentType: defaultContentType,
 			Retrieved:   time.Now(),
 		},
