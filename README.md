@@ -9,7 +9,9 @@ Driver for the polygonid DID method.
         amoy:
             contractAddress: "0x1a4cC30f2aA0377b0c3bc9848766D90cb4404124"
             networkURL: "https://polygon-amoy..."
+            walletKey: "<private ethereum key for signing EIP712>"
     ```
+    `walletKey` is only needed for the resolver if it's a trusted resolver that includes signature of EIP712 message when requested in the resolution with `signature=EthereumEip712Signature2021`.
 2. Build docker container:
     ```bash
     docker build -t driver-did-polygonid:local .
@@ -26,6 +28,7 @@ Driver for the polygonid DID method.
         amoy:
             contractAddress: "0x1a4cC30f2aA0377b0c3bc9848766D90cb4404124"
             networkURL: "<POLYGON_AMOY_RPC_URL>"
+            walletKey: "<private ethereum key for signing EIP712>"
     ```
 2. Build docker container:
     ```bash
