@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 	"github.com/iden3/go-iden3-core/v2/w3c"
 	"github.com/iden3/go-merkletree-sql/v2"
 	"github.com/iden3/go-schema-processor/v2/verifiable"
@@ -18,9 +19,17 @@ var (
 	ErrNotFound = errors.New("not found")
 )
 
+type PrimaryType int32
+
+const (
+	IdentityStateType PrimaryType = 0
+	GlobalStateType   PrimaryType = 1
+)
+
 type IdentityState struct {
 	StateInfo *StateInfo
 	GistInfo  *GistInfo
+	Signature string
 }
 
 type StateInfo struct {
@@ -95,6 +104,8 @@ type Resolver interface {
 	Resolve(ctx context.Context, did w3c.DID, opts *ResolverOpts) (IdentityState, error)
 	ResolveGist(ctx context.Context, opts *ResolverOpts) (*GistInfo, error)
 	BlockchainID() string
+	WalletAddress() (string, error)
+	TypedData(primaryType PrimaryType, did w3c.DID, identityState IdentityState, walletAddress string) (apitypes.TypedData, error)
 }
 
 type ResolverRegistry map[string]Resolver

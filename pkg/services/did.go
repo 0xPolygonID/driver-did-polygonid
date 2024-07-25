@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/iden3/driver-did-polygonid/pkg/document"
 	"github.com/iden3/driver-did-polygonid/pkg/services/ens"
@@ -25,8 +26,9 @@ type DidDocumentServices struct {
 }
 
 type ResolverOpts struct {
-	State    *big.Int
-	GistRoot *big.Int
+	State     *big.Int
+	GistRoot  *big.Int
+	Signature string
 }
 
 func NewDidDocumentServices(resolvers *ResolverRegistry, registry *ens.Registry) *DidDocumentServices {
@@ -45,25 +47,35 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 		return errResolution, err
 	}
 
-	userID, err := core.IDFromDID(*userDID)
-	errResolution, err = expectedError(err)
-	if err != nil {
-		return errResolution, err
+	blockchain := ""
+	network := ""
+	userID := core.ID{}
+	if userDID.IDStrings[2] == "000000000000000000000000000000000000000000" {
+		blockchain = userDID.IDStrings[0]
+		network = userDID.IDStrings[1]
+	} else {
+		userID, err = core.IDFromDID(*userDID)
+		errResolution, err = expectedError(err)
+		if err != nil {
+			return errResolution, err
+		}
+
+		b, err := core.BlockchainFromID(userID)
+		errResolution, err = expectedError(err)
+		if err != nil {
+			return errResolution, err
+		}
+
+		n, err := core.NetworkIDFromID(userID)
+		errResolution, err = expectedError(err)
+		if err != nil {
+			return errResolution, err
+		}
+		blockchain = string(b)
+		network = string(n)
 	}
 
-	b, err := core.BlockchainFromID(userID)
-	errResolution, err = expectedError(err)
-	if err != nil {
-		return errResolution, err
-	}
-
-	n, err := core.NetworkIDFromID(userID)
-	errResolution, err = expectedError(err)
-	if err != nil {
-		return errResolution, err
-	}
-
-	resolver, err := d.resolvers.GetResolverByNetwork(string(b), string(n))
+	resolver, err := d.resolvers.GetResolverByNetwork(blockchain, network)
 	errResolution, err = expectedError(err)
 	if err != nil {
 		return errResolution, err
@@ -97,7 +109,7 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 
 	chainIDStateAddress := resolver.BlockchainID()
 
-	if err == nil {
+	if err == nil && userDID.IDStrings[2] != "000000000000000000000000000000000000000000" {
 		addressString := fmt.Sprintf("%x", addr)
 		blockchainAccountID := fmt.Sprintf("eip155:%s:0x%s", strings.Split(chainIDStateAddress, ":")[0], addressString)
 		didResolution.DidDocument.VerificationMethod = append(
@@ -126,6 +138,31 @@ func (d *DidDocumentServices) GetDidDocument(ctx context.Context, did string, op
 			},
 		},
 	)
+
+	walletAddress, err := resolver.WalletAddress()
+
+	if err == nil && opts.Signature != "" {
+		primaryType := IdentityStateType
+		if userDID.IDStrings[2] == "000000000000000000000000000000000000000000" {
+			primaryType = GlobalStateType
+		}
+		eip712TypedData, err := resolver.TypedData(primaryType, *userDID, identityState, walletAddress)
+		if err != nil {
+			return nil, fmt.Errorf("invalid typed data: %v", err)
+		}
+
+		eip712Proof := &document.EthereumEip712SignatureProof2021{
+			Type:               document.EthereumEip712SignatureProof2021Type,
+			ProofPursopose:     "assertionMethod",
+			ProofValue:         identityState.Signature,
+			VerificationMethod: fmt.Sprintf("did:pkh:eip155:0:%s#blockchainAccountId", walletAddress),
+			Eip712:             eip712TypedData,
+			Created:            time.Now(),
+		}
+
+		didResolution.DidResolutionMetadata.Context = document.DidResolutionMetadataSigContext()
+		didResolution.DidResolutionMetadata.Proof = append(didResolution.DidResolutionMetadata.Proof, eip712Proof)
+	}
 
 	return didResolution, nil
 }

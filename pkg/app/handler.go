@@ -23,6 +23,7 @@ func (d *DidDocumentHandler) Get(w http.ResponseWriter, r *http.Request) {
 	opts, err := getResolverOpts(
 		r.URL.Query().Get("state"),
 		r.URL.Query().Get("gist"),
+		r.URL.Query().Get("signature"),
 	)
 	if err != nil {
 		log.Println("invalid options query:", err)
@@ -96,7 +97,7 @@ func (d *DidDocumentHandler) GetGist(w http.ResponseWriter, r *http.Request) {
 	gistInfo, err := d.DidDocumentService.GetGist(r.Context(), chain, networkid, nil)
 	if errors.Is(err, services.ErrNetworkIsNotSupported) {
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, `{"error":"resolver for '%s:%s' network not found"}`, chain, networkid)
+		log.Printf(`{"error":"resolver for '%s:%s' network not found"}`, chain, networkid)
 		return
 	} else if err != nil {
 		log.Printf("failed get info about latest gist from network '%s:%s': %v\n", chain, networkid, err)
@@ -110,7 +111,7 @@ func (d *DidDocumentHandler) GetGist(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getResolverOpts(state, gistRoot string) (ro services.ResolverOpts, err error) {
+func getResolverOpts(state, gistRoot, signature string) (ro services.ResolverOpts, err error) {
 	if state != "" && gistRoot != "" {
 		return ro, errors.New("'state' and 'gist root' cannot be used together")
 	}
@@ -127,6 +128,12 @@ func getResolverOpts(state, gistRoot string) (ro services.ResolverOpts, err erro
 			return ro, fmt.Errorf("invalid gist root format: %v", err)
 		}
 		ro.GistRoot = g.BigInt()
+	}
+	if signature != "" {
+		if signature != "EthereumEip712Signature2021" {
+			return ro, fmt.Errorf("not supported signature type %s", signature)
+		}
+		ro.Signature = signature
 	}
 	return
 }
