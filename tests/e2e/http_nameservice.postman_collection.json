@@ -44,13 +44,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{issuer_server}}/api/v1/identities",
+					"raw": "{{issuer_server}}/v2/identities",
 					"host": [
 						"{{issuer_server}}"
 					],
 					"path": [
-						"api",
-						"v1",
+						"v2",
 						"identities"
 					]
 				}
@@ -95,13 +94,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{issuer_server}}/api/v1/identities",
+					"raw": "{{issuer_server}}/v2/identities",
 					"host": [
 						"{{issuer_server}}"
 					],
 					"path": [
-						"api",
-						"v1",
+						"v2",
 						"identities"
 					]
 				}
@@ -339,16 +337,14 @@
 					}
 				},
 				"url": {
-					"raw": "{{issuer_server}}/api/v1/identities/{{issuer_identity}}/claims",
+					"raw": "{{issuer_server}}/v2/{{issuer_identity}}/credentials",
 					"host": [
 						"{{issuer_server}}"
 					],
 					"path": [
-						"api",
-						"v1",
-						"identities",
+						"v2",
 						"{{issuer_identity}}",
-						"claims"
+						"credentials"
 					]
 				}
 			},
@@ -412,16 +408,15 @@
 					}
 				},
 				"url": {
-					"raw": "{{issuer_server}}/api/v1/identities/{{issuer_identity}}/claims/{{age_claim_non_merklized_id}}",
+					"raw": "{{issuer_server}}/v2/identities/{{issuer_identity}}/credentials/{{age_claim_non_merklized_id}}",
 					"host": [
 						"{{issuer_server}}"
 					],
 					"path": [
-						"api",
-						"v1",
+						"v2",
 						"identities",
 						"{{issuer_identity}}",
-						"claims",
+						"credentials",
 						"{{age_claim_non_merklized_id}}"
 					]
 				}
