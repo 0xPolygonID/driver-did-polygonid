@@ -6,7 +6,7 @@
 	},
 	"item": [
 		{
-			"name": "Reslover state by NOT published genesis state",
+			"name": "Resolve state by NOT published genesis state",
 			"event": [
 				{
 					"listen": "test",
