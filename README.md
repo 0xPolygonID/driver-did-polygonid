@@ -14,7 +14,7 @@ Driver for the polygonid DID method.
     ```bash
     docker build -t driver-did-polygonid:local .
     ```
-3. Run docker conainer:
+3. Run docker container:
     ```bash
     docker run -p 8080:8080 driver-did-polygonid:local
     ```
