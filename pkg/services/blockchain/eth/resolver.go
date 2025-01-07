@@ -2,13 +2,22 @@ package eth
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/subtle"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 	"github.com/iden3/contracts-abi/state/go/abi"
 	"github.com/iden3/driver-did-polygonid/pkg/services"
 	core "github.com/iden3/go-iden3-core/v2"
@@ -26,10 +35,16 @@ type StateContract interface {
 }
 
 type Resolver struct {
-	state StateContract
-
+	state           StateContract
 	contractAddress string
 	chainID         int
+	walletKey       string
+}
+
+type AuthData struct {
+	TypedData apitypes.TypedData
+	Signature string
+	Address   string
 }
 
 var (
@@ -38,8 +53,45 @@ var (
 	stateNotFoundException    = "execution reverted: State does not exist"
 )
 
+var IdentityStateAPITypes = apitypes.Types{
+	"IdentityState": []apitypes.Type{
+		{Name: "from", Type: "address"},
+		{Name: "timestamp", Type: "uint256"},
+		{Name: "identity", Type: "uint256"},
+		{Name: "state", Type: "uint256"},
+		{Name: "replacedByState", Type: "uint256"},
+		{Name: "createdAtTimestamp", Type: "uint256"},
+		{Name: "replacedAtTimestamp", Type: "uint256"},
+	},
+	"EIP712Domain": []apitypes.Type{
+		{Name: "name", Type: "string"},
+		{Name: "version", Type: "string"},
+		{Name: "chainId", Type: "uint256"},
+		{Name: "verifyingContract", Type: "address"},
+	},
+}
+
+var GlobalStateAPITypes = apitypes.Types{
+	"GlobalState": []apitypes.Type{
+		{Name: "from", Type: "address"},
+		{Name: "timestamp", Type: "uint256"},
+		{Name: "root", Type: "uint256"},
+		{Name: "replacedByRoot", Type: "uint256"},
+		{Name: "createdAtTimestamp", Type: "uint256"},
+		{Name: "replacedAtTimestamp", Type: "uint256"},
+	},
+	"EIP712Domain": []apitypes.Type{
+		{Name: "name", Type: "string"},
+		{Name: "version", Type: "string"},
+		{Name: "chainId", Type: "uint256"},
+		{Name: "verifyingContract", Type: "address"},
+	},
+}
+
+var TimeStamp = TimeStampFn
+
 // NewResolver create new ethereum resolver.
-func NewResolver(url, address string) (*Resolver, error) {
+func NewResolver(url, address, walletKey string) (*Resolver, error) {
 	c, err := ethclient.Dial(url)
 	if err != nil {
 		return nil, err
@@ -52,6 +104,7 @@ func NewResolver(url, address string) (*Resolver, error) {
 	resolver := &Resolver{
 		state:           sc,
 		contractAddress: address,
+		walletKey:       walletKey,
 	}
 	chainID, err := c.NetworkID(context.Background())
 	if err != nil {
@@ -63,6 +116,27 @@ func NewResolver(url, address string) (*Resolver, error) {
 
 func (r *Resolver) BlockchainID() string {
 	return fmt.Sprintf("%d:%s", r.chainID, r.contractAddress)
+}
+
+func (r *Resolver) WalletAddress() (string, error) {
+	if r.walletKey == "" {
+		return "", errors.New("wallet key is not set")
+	}
+
+	privateKey, err := crypto.HexToECDSA(r.walletKey)
+	if err != nil {
+		return "", err
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return "", errors.New("error casting public key to ECDSA")
+	}
+
+	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	return walletAddress.String(), nil
 }
 
 func (r *Resolver) ResolveGist(
@@ -110,19 +184,32 @@ func (r *Resolver) Resolve(
 		err       error
 	)
 
-	userID, err := core.IDFromDID(did)
-	if err != nil {
-		return services.IdentityState{},
-			fmt.Errorf("invalid did format for did '%s': %v", did, err)
-	}
+	if did.IDStrings[2] == "000000000000000000000000000000000000000000" {
+		if opts.GistRoot == nil {
+			return services.IdentityState{},
+				errors.New("options GistRoot is required for root only did")
+		}
+		stateInfo = nil
+		gistInfo, err = r.resolveGistRootOnly(ctx, opts.GistRoot)
+	} else {
+		userID, err := core.IDFromDID(did)
+		if err != nil {
+			return services.IdentityState{},
+				fmt.Errorf("invalid did format for did '%s': %v", did, err)
+		}
 
-	switch {
-	case opts.GistRoot != nil:
-		stateInfo, gistInfo, err = r.resolveStateByGistRoot(ctx, userID, opts.GistRoot)
-	case opts.State != nil:
-		stateInfo, err = r.resolveState(ctx, userID, opts.State)
-	default:
-		stateInfo, gistInfo, err = r.resolveLatest(ctx, userID)
+		switch {
+		case opts.GistRoot != nil:
+			stateInfo, gistInfo, err = r.resolveStateByGistRoot(ctx, userID, opts.GistRoot)
+		case opts.State != nil:
+			stateInfo, err = r.resolveState(ctx, userID, opts.State)
+		default:
+			stateInfo, gistInfo, err = r.resolveLatest(ctx, userID)
+		}
+
+		if err != nil && err.Error() != "identity not found" {
+			return services.IdentityState{}, err
+		}
 	}
 
 	identityState := services.IdentityState{}
@@ -148,7 +235,224 @@ func (r *Resolver) Resolve(
 		}
 	}
 
+	signature := ""
+	if r.walletKey != "" && opts.Signature != "" {
+		primaryType := services.IdentityStateType
+		if stateInfo == nil {
+			primaryType = services.GlobalStateType
+		}
+		signature, err = r.signTypedData(primaryType, did, identityState)
+		if err != nil {
+			return services.IdentityState{}, err
+		}
+	}
+
+	identityState.Signature = signature
+
 	return identityState, err
+}
+
+func (r *Resolver) VerifyState(
+	primaryType services.PrimaryType,
+	identityState services.IdentityState,
+	did w3c.DID,
+) (bool, error) {
+	privateKey, err := crypto.HexToECDSA(r.walletKey)
+	if err != nil {
+		return false, err
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return false, errors.New("error casting public key to ECDSA")
+	}
+
+	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	typedData, err := r.TypedData(primaryType, did, identityState, walletAddress.String())
+	if err != nil {
+		return false, err
+	}
+
+	authData := AuthData{TypedData: typedData, Signature: identityState.Signature, Address: walletAddress.String()}
+	return r.verifyTypedData(authData)
+}
+
+func TimeStampFn() string {
+	timestamp := strconv.FormatInt(time.Now().UTC().Unix(), 10)
+	return timestamp
+}
+
+func (r *Resolver) TypedData(primaryType services.PrimaryType, did w3c.DID, identityState services.IdentityState, walletAddress string) (apitypes.TypedData, error) {
+	identity := "0"
+	if did.IDStrings[2] != "000000000000000000000000000000000000000000" {
+		userID, err := core.IDFromDID(did)
+		if err != nil {
+			return apitypes.TypedData{},
+				fmt.Errorf("invalid did format for did '%s': %v", did, err)
+		}
+		identity = userID.BigInt().String()
+	}
+
+	root := "0"
+	state := "0"
+	createdAtTimestamp := "0"
+	replacedByRoot := "0"
+	replacedByState := "0"
+	replacedAtTimestamp := "0"
+
+	if identityState.StateInfo != nil {
+		state = identityState.StateInfo.State.String()
+		replacedByState = identityState.StateInfo.ReplacedByState.String()
+		createdAtTimestamp = identityState.StateInfo.CreatedAtTimestamp.String()
+		replacedAtTimestamp = identityState.StateInfo.ReplacedAtTimestamp.String()
+	}
+	if identityState.GistInfo != nil {
+		root = identityState.GistInfo.Root.String()
+		replacedByRoot = identityState.GistInfo.ReplacedByRoot.String()
+		createdAtTimestamp = identityState.GistInfo.CreatedAtTimestamp.String()
+		replacedAtTimestamp = identityState.GistInfo.ReplacedAtTimestamp.String()
+	}
+
+	apiTypes := apitypes.Types{}
+	message := apitypes.TypedDataMessage{}
+	primaryTypeString := ""
+	timestamp := TimeStamp()
+
+	switch primaryType {
+	case services.IdentityStateType:
+		primaryTypeString = "IdentityState"
+		apiTypes = IdentityStateAPITypes
+		message = apitypes.TypedDataMessage{
+			"from":                walletAddress,
+			"timestamp":           timestamp,
+			"identity":            identity,
+			"state":               state,
+			"replacedByState":     replacedByState,
+			"createdAtTimestamp":  createdAtTimestamp,
+			"replacedAtTimestamp": replacedAtTimestamp,
+		}
+	case services.GlobalStateType:
+		primaryTypeString = "GlobalState"
+		apiTypes = GlobalStateAPITypes
+		message = apitypes.TypedDataMessage{
+			"from":                walletAddress,
+			"timestamp":           timestamp,
+			"root":                root,
+			"replacedByRoot":      replacedByRoot,
+			"createdAtTimestamp":  createdAtTimestamp,
+			"replacedAtTimestamp": replacedAtTimestamp,
+		}
+	}
+
+	typedData := apitypes.TypedData{
+		Types:       apiTypes,
+		PrimaryType: primaryTypeString,
+		Domain: apitypes.TypedDataDomain{
+			Name:              "StateInfo",
+			Version:           "1",
+			ChainId:           math.NewHexOrDecimal256(int64(0)),
+			VerifyingContract: "0x0000000000000000000000000000000000000000",
+		},
+		Message: message,
+	}
+
+	return typedData, nil
+}
+
+func (r *Resolver) signTypedData(primaryType services.PrimaryType, did w3c.DID, identityState services.IdentityState) (string, error) {
+	privateKey, err := crypto.HexToECDSA(r.walletKey)
+	if err != nil {
+		return "", err
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return "", errors.New("error casting public key to ECDSA")
+	}
+
+	walletAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+
+	typedData, err := r.TypedData(primaryType, did, identityState, walletAddress.String())
+	if err != nil {
+		return "", errors.New("error getting typed data for signing")
+	}
+
+	domainSeparator, err := typedData.HashStruct("EIP712Domain", typedData.Domain.Map())
+	if err != nil {
+		return "", errors.New("error hashing EIP712Domain for signing")
+	}
+	typedDataHash, err := typedData.HashStruct(typedData.PrimaryType, typedData.Message)
+	if err != nil {
+		return "", errors.New("error hashing PrimaryType message for signing")
+	}
+	rawData := []byte(fmt.Sprintf("\x19\x01%s%s", string(domainSeparator), string(typedDataHash)))
+	dataHash := crypto.Keccak256(rawData)
+
+	signature, err := crypto.Sign(dataHash, privateKey)
+	if err != nil {
+		return "", err
+	}
+
+	if signature[64] < 27 {
+		signature[64] += 27
+	}
+
+	return "0x" + hex.EncodeToString(signature), nil
+}
+
+func (r *Resolver) verifyTypedData(authData AuthData) (bool, error) {
+	signature, err := hexutil.Decode(authData.Signature)
+	if err != nil {
+		return false, fmt.Errorf("decode signature: %w", err)
+	}
+
+	// EIP-712 typed data marshaling
+	domainSeparator, err := authData.TypedData.HashStruct("EIP712Domain", authData.TypedData.Domain.Map())
+	if err != nil {
+		return false, fmt.Errorf("eip712domain hash struct: %w", err)
+	}
+	typedDataHash, err := authData.TypedData.HashStruct(authData.TypedData.PrimaryType, authData.TypedData.Message)
+	if err != nil {
+		return false, fmt.Errorf("primary type hash struct: %w", err)
+	}
+
+	// add magic string prefix
+	rawData := []byte(fmt.Sprintf("\x19\x01%s%s", string(domainSeparator), string(typedDataHash)))
+	sighash := crypto.Keccak256(rawData)
+
+	// update the recovery id
+	// https://github.com/ethereum/go-ethereum/blob/55599ee95d4151a2502465e0afc7c47bd1acba77/internal/ethapi/api.go#L442
+	signature[64] -= 27
+
+	// get the pubkey used to sign this signature
+	sigPubkey, err := crypto.Ecrecover(sighash, signature)
+	if err != nil {
+		return false, fmt.Errorf("ecrecover: %w", err)
+	}
+
+	// get the address to confirm it's the same one in the auth token
+	pubkey, err := crypto.UnmarshalPubkey(sigPubkey)
+	if err != nil {
+		return false, fmt.Errorf("unmarshal pub key: %w", err)
+	}
+	address := crypto.PubkeyToAddress(*pubkey)
+
+	// verify the signature (not sure if this is actually required after ecrecover)
+	signatureNoRecoverID := signature[:len(signature)-1]
+	verified := crypto.VerifySignature(sigPubkey, sighash, signatureNoRecoverID)
+	if !verified {
+		return false, errors.New("verification failed")
+	}
+
+	dataAddress := common.HexToAddress(authData.Address)
+	if subtle.ConstantTimeCompare(address.Bytes(), dataAddress.Bytes()) == 0 {
+		return false, errors.New("address mismatch")
+	}
+
+	return true, nil
 }
 
 func (r *Resolver) resolveLatest(
@@ -215,6 +519,18 @@ func (r *Resolver) resolveStateByGistRoot(
 	}
 
 	return &stateInfo, &gistInfo, verifyContractState(id, stateInfo)
+}
+
+func (r *Resolver) resolveGistRootOnly(
+	ctx context.Context,
+	gistRoot *big.Int,
+) (*abi.IStateGistRootInfo, error) {
+	gistInfo, err := r.state.GetGISTRootInfo(&bind.CallOpts{Context: ctx}, gistRoot)
+	if err = notFoundErr(err); err != nil {
+		return nil, err
+	}
+
+	return &gistInfo, nil
 }
 
 func verifyContractState(id core.ID, state abi.IStateStateInfo) error {
